@@ -80,7 +80,7 @@ export default function App() {
   const [pinError, setPinError] = useState(false);
 
   // YOUR SECRET PIN TO EDIT THE APP
-  const ADMIN_PIN = "1234";
+  const ADMIN_PIN = "6866";
 
   const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
   const currentMonthName = monthNames[currentDate.getMonth()];
