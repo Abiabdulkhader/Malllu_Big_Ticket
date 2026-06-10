@@ -19,6 +19,8 @@ import {
   Bell,
   Globe,
   CheckCircle2,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 import { initializeApp } from "firebase/app";
@@ -101,7 +103,7 @@ const T = {
       c === 1 ? "ഒരുത്തൻ മുങ്ങി നടക്കുന്നു" : `${c} പേർ മുങ്ങി നടക്കുന്നു`,
     goalReached: "കാശ് സെറ്റ്! വേഗം ടിക്കറ്റ് എടുക്കെടാ! 🏃‍♂️",
     ticketBuyer: "ഇത്തവണ ടിക്കറ്റ് എടുക്കുന്നത് 🎯",
-    buyerPlaceholder: "ആരാ ?",
+    buyerPlaceholder: "ആരെടാ അവൻ...",
     lotteryNumber: "ലോട്ടറി നമ്പർ",
     numberPlaceholderAdmin: "നമ്പർ അടിക്ക് ബ്രോ...",
     numberPlaceholderViewer: "കൈ വെക്കരുത്! ലോക്കാണ് 🔒",
@@ -201,6 +203,7 @@ const EMOJI = {
 
 export default function App() {
   const [lang, setLang] = useState("ML");
+  const [darkMode, setDarkMode] = useState(true); // Premium dark mode as default
   const [currentDate, setCurrentDate] = useState(new Date());
   const [payments, setPayments] = useState({});
   const [purchasers, setPurchasers] = useState({});
@@ -230,6 +233,7 @@ export default function App() {
   const progressPercent = (totalCollected / targetAmount) * 100;
   const isGoalReached = totalCollected === targetAmount;
 
+  // DYNAMIC COLOR SCALE CALCULATION (0 = Red, 120 = Green)
   const progressHue = Math.max(0, (progressPercent / 100) * 120);
 
   const currentPurchaserId = purchasers[monthKey] || "";
@@ -237,6 +241,22 @@ export default function App() {
 
   const getMemberName = (member) =>
     lang === "ML" ? member.name : member.enName;
+
+  // Haptic feedback function
+  const vibrate = () => {
+    if (typeof window !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(15);
+    }
+  };
+
+  // Toggle dark mode class on HTML element
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     if (!db) return;
@@ -276,6 +296,7 @@ export default function App() {
   // SMOOTH VIEW TRANSITION FUNCTION
   const changeView = (newView) => {
     if (newView === activeView) return;
+    vibrate();
     setIsViewFading(true);
     setTimeout(() => {
       setActiveView(newView);
@@ -284,18 +305,21 @@ export default function App() {
   };
 
   const handlePrevMonth = () => {
+    vibrate();
     setCurrentDate(
       (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
     );
   };
 
   const handleNextMonth = () => {
+    vibrate();
     setCurrentDate(
       (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
     );
   };
 
   const togglePayment = (memberId) => {
+    vibrate();
     if (!isAdmin) {
       setShowPinModal(true);
       return;
@@ -306,11 +330,11 @@ export default function App() {
     };
     const updatedPayments = { ...payments, [monthKey]: updatedMonthPayments };
     setPayments(updatedPayments);
-    // Don't trigger toast for every click as it gets annoying, but we save it.
     saveToFirebase("payments", updatedPayments, true);
   };
 
   const handlePurchaserChange = (e) => {
+    vibrate();
     if (!isAdmin) {
       setShowPinModal(true);
       return;
@@ -327,17 +351,16 @@ export default function App() {
     }
     const updatedTickets = { ...ticketNumbers, [monthKey]: e.target.value };
     setTicketNumbers(updatedTickets);
-    // Notice we don't trigger toast on every keystroke here to avoid spamming
     saveToFirebase("ticketNumbers", updatedTickets);
   };
 
-  // Trigger toast on blur for text input (when they finish typing)
   const handleTicketNumberBlur = () => {
     if (isAdmin) showToast(T[lang].saved);
   };
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
+    vibrate();
     if (pinInput === ADMIN_PIN) {
       setIsAdmin(true);
       setShowPinModal(false);
@@ -351,6 +374,7 @@ export default function App() {
   };
 
   const handleWhatsAppShare = () => {
+    vibrate();
     const paidNames = defaultMembers
       .filter((m) => monthPayments[m.id])
       .map((m) => getMemberName(m))
@@ -392,6 +416,7 @@ export default function App() {
   };
 
   const handleWhatsAppReminder = () => {
+    vibrate();
     const t1 = encodeURIComponent(`*${T[lang].waRemLine1}*`);
     const t2 = encodeURIComponent(`${T[lang].waRemLine2} `);
 
@@ -417,9 +442,9 @@ export default function App() {
 
     if (sortedKeys.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-20 px-6 text-center text-slate-500 animate-in fade-in duration-500">
-          <CalendarDays className="w-16 h-16 mb-4 text-slate-300 animate-pulse" />
-          <h2 className="text-xl font-bold text-slate-700 mb-2">
+        <div className="flex flex-col items-center justify-center py-20 px-6 text-center text-slate-500 dark:text-slate-400 animate-in fade-in duration-500">
+          <CalendarDays className="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600 animate-pulse" />
+          <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">
             {T[lang].emptyHistoryTitle}
           </h2>
           <p className="text-sm">{T[lang].emptyHistoryDesc}</p>
@@ -429,7 +454,7 @@ export default function App() {
 
     return (
       <div className="px-6 py-6 pb-24">
-        <h2 className="text-2xl font-extrabold text-slate-900 mb-6">
+        <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-6 transition-colors">
           {T[lang].historyTitle}
         </h2>
         <div className="space-y-4">
@@ -455,64 +480,64 @@ export default function App() {
                   setCurrentDate(new Date(year, month, 1));
                   changeView("dashboard");
                 }}
-                className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:border-emerald-300 hover:shadow-md animate-in slide-in-from-bottom-4 fade-in"
+                className="bg-white dark:bg-slate-800/80 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:shadow-md animate-in slide-in-from-bottom-4 fade-in"
                 style={{
                   animationDelay: `${index * 50}ms`,
                   animationFillMode: "both",
                 }}
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-lg text-slate-800">
+                  <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 transition-colors">
                     {T[lang].historyCollectedTitle} {monthNames[lang][month]}
                   </h3>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
                       collected === targetAmount
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-amber-100 text-amber-700"
+                        ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                        : "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400"
                     }`}
                   >
                     {collected} / {targetAmount} AED
                   </span>
                 </div>
 
-                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                <div className="space-y-3 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800/80 transition-colors">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-700/50">
+                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                       <CalendarCheck className="w-4 h-4 text-emerald-500" />
-                      <span className="font-semibold text-slate-700">
+                      <span className="font-semibold">
                         {T[lang].historyMonthTaken}
                       </span>
                     </div>
-                    <span className="text-sm font-bold text-emerald-700 bg-emerald-100/50 px-2 py-0.5 rounded">
+                    <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100/50 dark:bg-emerald-500/10 px-2 py-0.5 rounded">
                       {purchaseMonthDisplay}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Users className="w-4 h-4 text-slate-400" />
-                      <span className="font-semibold text-slate-700">
+                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                      <Users className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                      <span className="font-semibold">
                         {T[lang].historyBuyer}
                       </span>
                     </div>
-                    <span className="text-sm font-medium text-slate-800">
+                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
                       {purchaser}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Hash className="w-4 h-4 text-slate-400" />
-                      <span className="font-semibold text-slate-700">
+                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                      <Hash className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                      <span className="font-semibold">
                         {T[lang].historyLotteryNum}
                       </span>
                     </div>
                     <span
                       className={
                         tNumber === T[lang].notTaken
-                          ? "text-xs text-slate-400 italic"
-                          : "text-sm text-slate-800 font-mono font-bold"
+                          ? "text-xs text-slate-400 dark:text-slate-500 italic"
+                          : "text-sm text-slate-800 dark:text-slate-200 font-mono font-bold"
                       }
                     >
                       {tNumber}
@@ -528,12 +553,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans sm:py-8 selection:bg-emerald-200">
-      <div className="w-full sm:max-w-md mx-auto bg-slate-50 sm:bg-white sm:shadow-2xl sm:shadow-emerald-900/5 sm:border border-slate-100 sm:rounded-[2.5rem] overflow-hidden relative min-h-screen sm:min-h-0">
+    <div
+      className={`min-h-screen font-sans sm:py-8 selection:bg-emerald-200 transition-colors duration-500 ${
+        darkMode ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"
+      }`}
+    >
+      <div className="w-full sm:max-w-md mx-auto bg-slate-50 dark:bg-slate-900 sm:shadow-2xl sm:shadow-emerald-900/5 sm:border border-slate-100 dark:border-slate-800 sm:rounded-[2.5rem] overflow-hidden relative min-h-screen sm:min-h-0 transition-colors duration-500">
         {/* MODERN HEADER SECTION */}
         {activeView === "dashboard" && (
           <div className="px-6 pt-8 pb-6 flex items-start justify-between relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-emerald-100/50 to-transparent -z-10"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-emerald-100/50 dark:from-emerald-900/20 to-transparent -z-10 transition-colors"></div>
 
             <div className="flex flex-col gap-2 relative z-10 w-full">
               <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 tracking-tight drop-shadow-sm pb-1">
@@ -541,18 +570,36 @@ export default function App() {
               </h1>
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
-                  <span className="bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-sm text-xs font-bold text-slate-600 flex items-center gap-1.5 hover:scale-105 transition-transform">
+                  <span className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-sm text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:scale-105 transition-all">
                     <Users className="w-3.5 h-3.5 text-emerald-500" />{" "}
                     {T[lang].subtitle}
                   </span>
 
                   {/* LANGUAGE SWITCH BUTTON */}
                   <button
-                    onClick={() => setLang(lang === "ML" ? "EN" : "ML")}
-                    className="bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-sm text-xs font-bold text-emerald-600 flex items-center gap-1.5 hover:bg-emerald-50 active:scale-95 transition-all"
+                    onClick={() => {
+                      vibrate();
+                      setLang(lang === "ML" ? "EN" : "ML");
+                    }}
+                    className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-sm text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 hover:bg-emerald-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
                   >
                     <Globe className="w-3.5 h-3.5 text-emerald-500" />{" "}
                     {lang === "ML" ? "EN" : "ML"}
+                  </button>
+
+                  {/* DARK MODE TOGGLE */}
+                  <button
+                    onClick={() => {
+                      vibrate();
+                      setDarkMode(!darkMode);
+                    }}
+                    className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-sm text-xs font-bold flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all"
+                  >
+                    {darkMode ? (
+                      <Sun className="w-3.5 h-3.5 text-yellow-400" />
+                    ) : (
+                      <Moon className="w-3.5 h-3.5 text-slate-500" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -564,19 +611,20 @@ export default function App() {
         {activeView === "dashboard" && (
           <div className="px-6 pb-4 animate-in fade-in duration-500">
             <button
-              onClick={() =>
-                isAdmin ? setIsAdmin(false) : setShowPinModal(true)
-              }
+              onClick={() => {
+                vibrate();
+                isAdmin ? setIsAdmin(false) : setShowPinModal(true);
+              }}
               className={`px-4 py-2.5 rounded-2xl flex items-center gap-1.5 text-xs font-extrabold transition-all duration-300 shadow-sm active:scale-95 relative z-10 ${
                 isAdmin
                   ? "bg-gradient-to-br from-amber-100 to-orange-100 text-amber-800 border border-amber-200/60 shadow-amber-500/20"
-                  : "bg-white text-slate-600 border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:shadow-md"
+                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:shadow-md"
               }`}
             >
               {isAdmin ? (
                 <Unlock className="w-4 h-4 animate-in zoom-in spin-in-12 duration-300" />
               ) : (
-                <Lock className="w-4 h-4 text-slate-400" />
+                <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500" />
               )}
               {isAdmin ? T[lang].bossMode : T[lang].viewerMode}
             </button>
@@ -598,8 +646,12 @@ export default function App() {
                 <div
                   className="rounded-3xl p-6 text-white shadow-xl relative overflow-hidden transition-all duration-700 ease-out border border-white/20 hover:scale-[1.02]"
                   style={{
-                    background: `linear-gradient(135deg, hsl(${progressHue}, 75%, 45%), hsl(${progressHue}, 90%, 25%))`,
-                    boxShadow: `0 20px 25px -5px hsla(${progressHue}, 80%, 30%, 0.4)`,
+                    background: darkMode
+                      ? `linear-gradient(135deg, hsl(${progressHue}, 50%, 25%), hsl(${progressHue}, 70%, 10%))`
+                      : `linear-gradient(135deg, hsl(${progressHue}, 75%, 45%), hsl(${progressHue}, 90%, 25%))`,
+                    boxShadow: darkMode
+                      ? `0 20px 25px -5px hsla(${progressHue}, 60%, 15%, 0.6)`
+                      : `0 20px 25px -5px hsla(${progressHue}, 80%, 30%, 0.4)`,
                   }}
                 >
                   <Award className="absolute -right-6 -bottom-6 w-32 h-32 text-white/10 rotate-12 transition-transform duration-700 hover:rotate-[24deg] hover:scale-110" />
@@ -642,7 +694,7 @@ export default function App() {
                       <span>{T[lang].unpaidText(unpaidCount)}</span>
                     </div>
 
-                    <div className="h-3 w-full bg-black/25 rounded-full overflow-hidden backdrop-blur-md shadow-inner">
+                    <div className="h-3 w-full bg-black/30 rounded-full overflow-hidden backdrop-blur-md shadow-inner">
                       <div
                         className="h-full bg-gradient-to-r from-amber-300 to-amber-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(251,191,36,0.6)]"
                         style={{ width: `${progressPercent}%` }}
@@ -659,13 +711,13 @@ export default function App() {
               </div>
 
               <div className="px-6 mb-6 space-y-3 animate-in slide-in-from-bottom-4 fade-in duration-500 delay-100 fill-mode-both">
-                <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-4 transition-all hover:shadow-md hover:border-emerald-100 group">
-                  <div className="flex items-center gap-3 text-slate-700 font-medium">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 flex items-center justify-center shadow-inner border border-amber-200/50 group-hover:scale-110 transition-transform">
+                <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-4 shadow-sm border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-4 transition-all hover:shadow-md hover:border-emerald-100 dark:hover:border-emerald-500/30 group">
+                  <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200 font-medium">
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-800/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-inner border border-amber-200/50 dark:border-amber-700/50 group-hover:scale-110 transition-transform">
                       <Users className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-extrabold text-slate-800">
+                      <p className="text-sm font-extrabold text-slate-800 dark:text-slate-100">
                         {T[lang].ticketBuyer}
                       </p>
                     </div>
@@ -674,7 +726,7 @@ export default function App() {
                     disabled={!isAdmin}
                     value={currentPurchaserId}
                     onChange={handlePurchaserChange}
-                    className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[140px] disabled:opacity-60 cursor-pointer shadow-sm transition-all"
+                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[140px] disabled:opacity-60 cursor-pointer shadow-sm transition-all"
                   >
                     <option value="">{T[lang].buyerPlaceholder}</option>
                     {defaultMembers.map((m) => (
@@ -685,13 +737,13 @@ export default function App() {
                   </select>
                 </div>
 
-                <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-4 transition-all hover:shadow-md hover:border-blue-100 group">
-                  <div className="flex items-center gap-3 text-slate-700 font-medium">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 flex items-center justify-center shadow-inner border border-blue-200/50 group-hover:scale-110 transition-transform">
+                <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-4 shadow-sm border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-4 transition-all hover:shadow-md hover:border-blue-100 dark:hover:border-blue-500/30 group">
+                  <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200 font-medium">
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/40 dark:to-blue-800/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-inner border border-blue-200/50 dark:border-blue-700/50 group-hover:scale-110 transition-transform">
                       <Hash className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-extrabold text-slate-800">
+                      <p className="text-sm font-extrabold text-slate-800 dark:text-slate-100">
                         {T[lang].lotteryNumber}
                       </p>
                     </div>
@@ -707,17 +759,17 @@ export default function App() {
                     value={currentTicketNumber}
                     onChange={handleTicketNumberChange}
                     onBlur={handleTicketNumberBlur}
-                    className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 w-[140px] disabled:opacity-60 text-right shadow-sm transition-all"
+                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 w-[140px] disabled:opacity-60 text-right shadow-sm transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                 </div>
               </div>
 
               <div className="px-6 mb-6 animate-in slide-in-from-bottom-8 fade-in duration-500 delay-200 fill-mode-both">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-black text-slate-800">
+                  <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 transition-colors">
                     {T[lang].whoPaidTitle}
                   </h3>
-                  <span className="text-xs font-bold text-slate-400 bg-slate-200/50 px-2 py-1 rounded-lg">
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-200/50 dark:bg-slate-800 px-2 py-1 rounded-lg transition-colors">
                     {T[lang].peopleCount(paidCount)}
                   </span>
                 </div>
@@ -732,8 +784,8 @@ export default function App() {
                         onClick={() => togglePayment(member.id)}
                         className={`w-full flex items-center justify-between p-4 rounded-3xl transition-all duration-300 active:scale-95 hover:scale-[1.01] ${
                           isPaid
-                            ? "bg-gradient-to-r from-emerald-50 to-white border border-emerald-200/70 shadow-sm"
-                            : "bg-white border border-slate-100 shadow-sm hover:border-slate-200 hover:shadow-md"
+                            ? "bg-gradient-to-r from-emerald-50 to-white dark:from-emerald-900/30 dark:to-slate-800 border border-emerald-200/70 dark:border-emerald-700/50 shadow-sm"
+                            : "bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 shadow-sm hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-md"
                         }`}
                       >
                         <div className="flex items-center gap-4">
@@ -741,14 +793,14 @@ export default function App() {
                             <div
                               className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black transition-all duration-500 ${
                                 isPaid
-                                  ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 scale-105"
-                                  : "bg-slate-100 text-slate-400 scale-100"
+                                  ? "bg-gradient-to-br from-emerald-400 to-emerald-600 dark:from-emerald-500 dark:to-emerald-700 text-white shadow-lg shadow-emerald-500/30 scale-105"
+                                  : "bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 scale-100"
                               }`}
                             >
                               {Array.from(getMemberName(member))[0]}
                             </div>
                             {isPurchaser && (
-                              <div className="absolute -bottom-1.5 -right-1.5 bg-gradient-to-br from-amber-300 to-amber-500 p-1.5 rounded-xl border-2 border-white shadow-sm transform rotate-12 animate-in zoom-in duration-300">
+                              <div className="absolute -bottom-1.5 -right-1.5 bg-gradient-to-br from-amber-300 to-amber-500 p-1.5 rounded-xl border-2 border-white dark:border-slate-800 shadow-sm transform rotate-12 animate-in zoom-in duration-300">
                                 <Ticket className="w-3.5 h-3.5 text-white" />
                               </div>
                             )}
@@ -756,14 +808,18 @@ export default function App() {
                           <div className="text-left">
                             <p
                               className={`text-base font-extrabold transition-colors duration-300 ${
-                                isPaid ? "text-emerald-950" : "text-slate-700"
+                                isPaid
+                                  ? "text-emerald-950 dark:text-emerald-400"
+                                  : "text-slate-700 dark:text-slate-200"
                               }`}
                             >
                               {getMemberName(member)}
                             </p>
                             <p
                               className={`text-sm font-bold transition-colors duration-300 ${
-                                isPaid ? "text-emerald-600" : "text-slate-400"
+                                isPaid
+                                  ? "text-emerald-600 dark:text-emerald-500/80"
+                                  : "text-slate-400 dark:text-slate-500"
                               }`}
                             >
                               50 AED
@@ -776,7 +832,7 @@ export default function App() {
                           {isPaid ? (
                             <CircleCheck className="w-8 h-8 text-emerald-500 drop-shadow-sm animate-in zoom-in spin-in-12 duration-300" />
                           ) : (
-                            <Circle className="w-8 h-8 text-slate-200 transition-colors" />
+                            <Circle className="w-8 h-8 text-slate-200 dark:text-slate-600 transition-colors" />
                           )}
                         </div>
                       </button>
@@ -797,7 +853,7 @@ export default function App() {
 
                 <button
                   onClick={handleWhatsAppReminder}
-                  className="flex-1 bg-amber-500 text-white font-extrabold py-3 px-2 rounded-[1.25rem] hover:bg-amber-600 transition-all duration-200 shadow-lg shadow-amber-500/30 active:scale-90 hover:-translate-y-1 flex flex-col items-center justify-center gap-1.5 text-[11px] sm:text-xs text-center leading-tight group"
+                  className="flex-1 bg-amber-500 dark:bg-amber-600 text-white font-extrabold py-3 px-2 rounded-[1.25rem] hover:bg-amber-600 dark:hover:bg-amber-700 transition-all duration-200 shadow-lg shadow-amber-500/30 active:scale-90 hover:-translate-y-1 flex flex-col items-center justify-center gap-1.5 text-[11px] sm:text-xs text-center leading-tight group"
                 >
                   <Bell className="w-5 h-5 group-hover:scale-110 transition-transform group-hover:rotate-12" />
                   {T[lang].sendReminder}
@@ -815,30 +871,31 @@ export default function App() {
               : "opacity-0 translate-y-8 scale-95 pointer-events-none"
           }`}
         >
-          <div className="bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-slate-800">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <div className="bg-slate-900/90 dark:bg-slate-100/90 backdrop-blur-md text-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-slate-800 dark:border-slate-200">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 dark:text-emerald-600" />
             <span className="font-bold text-sm tracking-wide">{toast.msg}</span>
           </div>
         </div>
 
         {showPinModal && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-[2rem] p-7 w-full max-w-xs shadow-2xl animate-in fade-in zoom-in-95 duration-200 border border-slate-100">
+          <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-7 w-full max-w-xs shadow-2xl animate-in fade-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-700">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-black text-xl text-slate-900">
+                <h3 className="font-black text-xl text-slate-900 dark:text-white">
                   {T[lang].modalTitle}
                 </h3>
                 <button
                   onClick={() => {
+                    vibrate();
                     setShowPinModal(false);
                     setPinError(false);
                   }}
-                  className="text-slate-400 hover:text-slate-600 bg-slate-100 p-1.5 rounded-full transition-colors"
+                  className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 bg-slate-100 dark:bg-slate-700 p-1.5 rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-sm font-medium text-slate-500 mb-6">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">
                 {T[lang].modalDesc}
               </p>
               <form onSubmit={handlePinSubmit} className="space-y-5">
@@ -851,11 +908,11 @@ export default function App() {
                     value={pinInput}
                     onChange={(e) => setPinInput(e.target.value)}
                     placeholder={T[lang].pinPlaceholder}
-                    className="w-full text-center tracking-[0.5em] text-3xl p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-inner"
+                    className="w-full text-center tracking-[0.5em] text-3xl p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all shadow-inner"
                     autoFocus
                   />
                   {pinError && (
-                    <p className="text-xs font-bold text-red-500 text-center mt-3 bg-red-50 py-1.5 rounded-lg border border-red-100 animate-in slide-in-from-top-2">
+                    <p className="text-xs font-bold text-red-500 dark:text-red-400 text-center mt-3 bg-red-50 dark:bg-red-500/10 py-1.5 rounded-lg border border-red-100 dark:border-red-500/20 animate-in slide-in-from-top-2">
                       {T[lang].pinError}
                     </p>
                   )}
@@ -872,13 +929,13 @@ export default function App() {
         )}
 
         {/* BOTTOM NAVIGATION BAR */}
-        <div className="fixed sm:absolute bottom-0 w-full sm:max-w-md bg-white/80 backdrop-blur-xl border-t border-slate-100 flex justify-around p-3 pb-safe shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)] z-40">
+        <div className="fixed sm:absolute bottom-0 w-full sm:max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 flex justify-around p-3 pb-safe shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)] z-40 transition-colors">
           <button
             onClick={() => changeView("dashboard")}
             className={`flex flex-col items-center p-2 rounded-2xl w-24 transition-all duration-300 ${
               activeView === "dashboard"
-                ? "text-emerald-600 bg-emerald-50 scale-110"
-                : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 scale-110"
+                : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             <Home
@@ -897,8 +954,8 @@ export default function App() {
             onClick={() => changeView("history")}
             className={`flex flex-col items-center p-2 rounded-2xl w-24 transition-all duration-300 ${
               activeView === "history"
-                ? "text-emerald-600 bg-emerald-50 scale-110"
-                : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 scale-110"
+                : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             <History
