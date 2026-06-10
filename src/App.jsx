@@ -101,7 +101,7 @@ const T = {
       c === 1 ? "ഒരുത്തൻ മുങ്ങി നടക്കുന്നു" : `${c} പേർ മുങ്ങി നടക്കുന്നു`,
     goalReached: "കാശ് സെറ്റ്! വേഗം ടിക്കറ്റ് എടുക്കെടാ! 🏃‍♂️",
     ticketBuyer: "ഇത്തവണ ടിക്കറ്റ് എടുക്കുന്നത് 🎯",
-    buyerPlaceholder: "ആരെടാ അവൻ...",
+    buyerPlaceholder: "ആരാ ?",
     lotteryNumber: "ലോട്ടറി നമ്പർ",
     numberPlaceholderAdmin: "നമ്പർ അടിക്ക് ബ്രോ...",
     numberPlaceholderViewer: "കൈ വെക്കരുത്! ലോക്കാണ് 🔒",
