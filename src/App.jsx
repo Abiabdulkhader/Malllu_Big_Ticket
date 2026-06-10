@@ -376,7 +376,7 @@ export default function App() {
                     </span>
                   </div>
                   <p className="text-emerald-100 text-sm font-bold uppercase tracking-wider">
-                    AED പോക്കറ്റിൽ എത്തി
+                    AED കിട്ടി
                   </p>
                 </div>
 
@@ -418,7 +418,7 @@ export default function App() {
                   </div>
                   <div>
                     <p className="text-sm font-extrabold text-slate-800">
-                      ഇത്തവണത്തെ നീ എടുക്ക്🎯
+                      ഇത്തവണ ടിക്കറ്റ് എടുക്കുന്നത് 🎯
                     </p>
                   </div>
                 </div>
