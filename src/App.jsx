@@ -395,48 +395,49 @@ export default function App() {
           renderHistory()
         ) : (
           <div className="pb-32">
+            {/* DYNAMIC DASHBOARD CARD */}
             <div className="px-6 mb-6">
-              <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-3xl p-6 text-white shadow-xl shadow-emerald-900/20 relative overflow-hidden border border-emerald-500/30">
-                <Award className="absolute -right-6 -bottom-6 w-32 h-32 text-emerald-500/20 rotate-12" />
+              <div
+                className="rounded-3xl p-6 text-white shadow-xl relative overflow-hidden transition-colors duration-700 ease-out border border-white/20"
+                style={{
+                  background: `linear-gradient(135deg, hsl(${progressHue}, 75%, 45%), hsl(${progressHue}, 90%, 25%))`,
+                  boxShadow: `0 20px 25px -5px hsla(${progressHue}, 80%, 30%, 0.4)`,
+                }}
+              >
+                <Award className="absolute -right-6 -bottom-6 w-32 h-32 text-white/10 rotate-12" />
 
                 <div className="flex items-center justify-between mb-8 relative z-10">
                   <button
                     onClick={handlePrevMonth}
                     className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm"
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-5 h-5 text-white" />
                   </button>
-                  <h2 className="text-lg font-bold tracking-wide drop-shadow-md">
+                  <h2 className="text-lg font-bold tracking-wide drop-shadow-md text-white">
                     {currentMonthName} {currentYear}
                   </h2>
                   <button
                     onClick={handleNextMonth}
                     className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm"
                   >
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="w-5 h-5 text-white" />
                   </button>
                 </div>
 
                 <div className="relative z-10 text-center mb-6">
-                  <div
-                    className="text-5xl font-black mb-1 flex items-baseline justify-center gap-1 drop-shadow-lg"
-                    style={{
-                      color: `hsl(${progressHue}, 90%, 65%)`,
-                      transition: "color 0.5s ease-out",
-                    }}
-                  >
+                  <div className="text-5xl font-black mb-1 flex items-baseline justify-center gap-1 drop-shadow-lg text-white">
                     {totalCollected}{" "}
-                    <span className="text-xl font-medium text-emerald-200">
+                    <span className="text-xl font-medium text-white/80">
                       / 500
                     </span>
                   </div>
-                  <p className="text-emerald-100 text-sm font-bold uppercase tracking-wider">
+                  <p className="text-white/80 text-sm font-bold uppercase tracking-wider">
                     AED കിട്ടി
                   </p>
                 </div>
 
                 <div className="relative z-10">
-                  <div className="flex justify-between text-xs font-semibold mb-2 text-emerald-50 drop-shadow-sm">
+                  <div className="flex justify-between text-xs font-semibold mb-2 text-white/90 drop-shadow-sm">
                     <span>
                       {paidCount === 1
                         ? "ഒരാൾ കാശ് തന്നു"
@@ -448,20 +449,17 @@ export default function App() {
                         : `${unpaidCount} പേർ മുങ്ങി നടക്കുന്നു`}
                     </span>
                   </div>
-                  <div className="h-3 w-full bg-emerald-900/60 rounded-full overflow-hidden backdrop-blur-md shadow-inner">
+
+                  <div className="h-3 w-full bg-black/25 rounded-full overflow-hidden backdrop-blur-md shadow-inner">
                     <div
-                      className="h-full rounded-full transition-all duration-500 ease-out"
-                      style={{
-                        width: `${progressPercent}%`,
-                        backgroundColor: `hsl(${progressHue}, 85%, 50%)`,
-                        boxShadow: `0 0 12px hsla(${progressHue}, 85%, 50%, 0.6)`,
-                      }}
+                      className="h-full bg-gradient-to-r from-amber-300 to-amber-400 rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(251,191,36,0.6)]"
+                      style={{ width: `${progressPercent}%` }}
                     />
                   </div>
                 </div>
 
                 {isGoalReached && (
-                  <div className="mt-5 bg-emerald-500/30 backdrop-blur-md border border-emerald-400/50 rounded-2xl p-3 flex items-center justify-center gap-2 animate-pulse text-amber-300 font-black text-sm shadow-lg">
+                  <div className="mt-5 bg-white/20 backdrop-blur-md border border-white/40 rounded-2xl p-3 flex items-center justify-center gap-2 animate-pulse text-white font-black text-sm shadow-lg">
                     <Ticket className="w-5 h-5" /> കാശ് സെറ്റ്! വേഗം ടിക്കറ്റ്
                     എടുക്കെടാ! 🏃‍♂️
                   </div>
