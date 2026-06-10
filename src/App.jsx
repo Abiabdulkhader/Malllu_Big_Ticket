@@ -17,6 +17,7 @@ import {
   Unlock,
   MessageCircle,
   Bell,
+  Globe,
 } from "lucide-react";
 
 import { initializeApp } from "firebase/app";
@@ -41,35 +42,147 @@ try {
   console.error("Firebase Initialization Error:", error);
 }
 
+// Added English names
 const defaultMembers = [
-  { id: "1", name: "അബി" },
-  { id: "2", name: "ദിലു" },
-  { id: "3", name: "ഖാദർ" },
-  { id: "4", name: "ഷാനു" },
-  { id: "5", name: "അൽത്താഫ്" },
-  { id: "6", name: "ബർകത്ത്" },
-  { id: "7", name: "അജ്ഞാതൻ" },
-  { id: "8", name: "റഹ്മാൻ" },
-  { id: "9", name: "സപ്പി" },
-  { id: "10", name: "മക്കു" },
+  { id: "1", name: "അബി", enName: "Abi" },
+  { id: "2", name: "ദിലു", enName: "Dilu" },
+  { id: "3", name: "ഖാദർ", enName: "Khader" },
+  { id: "4", name: "ഷാനു", enName: "Shanu" },
+  { id: "5", name: "അൽത്താഫ്", enName: "Althaf" },
+  { id: "6", name: "ബർകത്ത്", enName: "Barkath" },
+  { id: "7", name: "അജ്ഞാതൻ", enName: "Secret Guy" },
+  { id: "8", name: "റഹ്മാൻ", enName: "Rahman" },
+  { id: "9", name: "സപ്പി", enName: "Sappi" },
+  { id: "10", name: "മക്കു", enName: "Makku" },
 ];
 
-const monthNames = [
-  "ജനുവരി",
-  "ഫെബ്രുവരി",
-  "മാർച്ച്",
-  "ഏപ്രിൽ",
-  "മെയ്",
-  "ജൂൺ",
-  "ജൂലൈ",
-  "ഓഗസ്റ്റ്",
-  "സെപ്റ്റംബർ",
-  "ഒക്ടോബർ",
-  "നവംബർ",
-  "ഡിസംബർ",
-];
+const monthNames = {
+  ML: [
+    "ജനുവരി",
+    "ഫെബ്രുവരി",
+    "മാർച്ച്",
+    "ഏപ്രിൽ",
+    "മെയ്",
+    "ജൂൺ",
+    "ജൂലൈ",
+    "ഓഗസ്റ്റ്",
+    "സെപ്റ്റംബർ",
+    "ഒക്ടോബർ",
+    "നവംബർ",
+    "ഡിസംബർ",
+  ],
+  EN: [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ],
+};
 
-// GENERATING EMOJIS DYNAMICALLY TO PREVENT CODESANDBOX CORRUPTION
+// TRANSLATION DICTIONARY
+const T = {
+  ML: {
+    appTitle: "കോടീശ്വരൻ പ്ലാൻ 💰",
+    subtitle: "മാസപ്പടി പിരിവ്",
+    bossMode: "മുതലാളി മോഡ് 🕶️",
+    viewerMode: "കാഴ്ചക്കാരൻ 👁️",
+    collected: "AED കിട്ടി",
+    paidText: (c) => (c === 1 ? "ഒരാൾ കാശ് തന്നു" : `${c} പേർ കാശ് തന്നു`),
+    unpaidText: (c) =>
+      c === 1 ? "ഒരുത്തൻ മുങ്ങി നടക്കുന്നു" : `${c} പേർ മുങ്ങി നടക്കുന്നു`,
+    goalReached: "കാശ് സെറ്റ്! വേഗം ടിക്കറ്റ് എടുക്കെടാ! 🏃‍♂️",
+    ticketBuyer: "ഇത്തവണ ടിക്കറ്റ് എടുക്കുന്നത് 🎯",
+    buyerPlaceholder: "ആരെടാ അവൻ...",
+    lotteryNumber: "ലോട്ടറി നമ്പർ",
+    numberPlaceholderAdmin: "നമ്പർ അടിക്ക് ബ്രോ...",
+    numberPlaceholderViewer: "കൈ വെക്കരുത്! ലോക്കാണ് 🔒",
+    whoPaidTitle: "ആരൊക്കെ കാശ് തന്നു? 🧐",
+    peopleCount: (c) => `${c}/10 പേർ`,
+    shareStatus: "സ്റ്റാറ്റസ് ഇടുക 📲",
+    sendReminder: "ഓർമ്മിപ്പിക്കുക 📢",
+    modalTitle: "ആരാടാ നീ? 🤨",
+    modalDesc: "മുതലാളി ആണെങ്കിൽ രഹസ്യ നമ്പർ അടിക്ക്.",
+    pinPlaceholder: "••••",
+    pinError: "അളിയാ.. നമ്പർ തെറ്റി! കള്ളനാണോ? 🚨",
+    unlockBtn: "തുറക്കടാ കുട്ടാ🚪",
+    navHome: "തറവാട്",
+    navHistory: "ചരിത്രം",
+    emptyHistoryTitle: "ശൂന്യം... മഹാ ശൂന്യം! 🤷‍♂️",
+    emptyHistoryDesc: "ആദ്യം വല്ലതും പിരിവിട്, എന്നിട്ട് ചരിത്രം അന്വേഷിക്കാം.",
+    historyTitle: "പഴയ കഥകൾ 📜",
+    historyCollectedTitle: "പിരിച്ചത്:",
+    historyMonthTaken: "എടുത്ത മാസം:",
+    historyBuyer: "എടുത്തവൻ :",
+    historyLotteryNum: "ഭാഗ്യ നമ്പർ:",
+    noOne: "ആരുമില്ല",
+    notTaken: "എടുത്തിട്ടില്ല",
+    nobodyPaid: "ആരും തന്നിട്ടില്ല",
+    everybodyPaid: "ആരുമില്ല, എല്ലാവരും സെറ്റ്!",
+    waShareLine1: "കോടീശ്വരൻ പ്ലാൻ:",
+    waShareLine2: "പിരിവ്:",
+    waShareLine3: "ടിക്കറ്റ് എടുക്കുന്നത്:",
+    waShareLine4: "ലോട്ടറി നമ്പർ:",
+    waShareLine5: "കാശ് തന്നവർ:",
+    waShareLine6: "മുങ്ങി നടക്കുന്നവർ:",
+    waRemLine1: "കോടീശ്വരൻ പ്ലാൻ",
+    waRemLine2: "ഈ മാസത്തെ പിരിവിനുള്ള സമയം ആയതായി അറിയിക്കുന്നു",
+  },
+  EN: {
+    appTitle: "Millionaire Plan 💰",
+    subtitle: "Monthly Collection",
+    bossMode: "Boss Mode 🕶️",
+    viewerMode: "Viewer Mode 👁️",
+    collected: "AED Collected",
+    paidText: (c) => (c === 1 ? "1 Person Paid" : `${c} People Paid`),
+    unpaidText: (c) =>
+      c === 1 ? "1 Person Absconding" : `${c} People Absconding`,
+    goalReached: "Cash Ready! Go buy the ticket! 🏃‍♂️",
+    ticketBuyer: "Buying ticket this month 🎯",
+    buyerPlaceholder: "Select someone...",
+    lotteryNumber: "Lottery Number",
+    numberPlaceholderAdmin: "Enter number bro...",
+    numberPlaceholderViewer: "Don't touch! Locked 🔒",
+    whoPaidTitle: "Who all paid? 🧐",
+    peopleCount: (c) => `${c}/10 People`,
+    shareStatus: "Share Status 📲",
+    sendReminder: "Send Reminder 📢",
+    modalTitle: "Who are you? 🤨",
+    modalDesc: "Enter the secret PIN if you are the boss.",
+    pinPlaceholder: "••••",
+    pinError: "Bro.. Wrong PIN! Are you a thief? 🚨",
+    unlockBtn: "Open Sesame 🚪",
+    navHome: "Home",
+    navHistory: "History",
+    emptyHistoryTitle: "Empty... completely empty! 🤷‍♂️",
+    emptyHistoryDesc: "Collect some funds first, then look for history.",
+    historyTitle: "Past Stories 📜",
+    historyCollectedTitle: "Collected:",
+    historyMonthTaken: "Month Taken:",
+    historyBuyer: "Buyer :",
+    historyLotteryNum: "Lucky Number:",
+    noOne: "No one",
+    notTaken: "Not updated",
+    nobodyPaid: "Nobody paid yet",
+    everybodyPaid: "No one, everyone is set!",
+    waShareLine1: "Millionaire Plan:",
+    waShareLine2: "Collection:",
+    waShareLine3: "Ticket Buyer:",
+    waShareLine4: "Lottery Number:",
+    waShareLine5: "Paid Members:",
+    waShareLine6: "Absconding:",
+    waRemLine1: "Millionaire Plan",
+    waRemLine2: "Time for this month's collection has arrived",
+  },
+};
+
 const EMOJI = {
   moneyBag: String.fromCodePoint(0x1f4b0),
   cash: String.fromCodePoint(0x1f4b5),
@@ -84,6 +197,7 @@ const EMOJI = {
 };
 
 export default function App() {
+  const [lang, setLang] = useState("ML"); // DEFAULT LANGUAGE
   const [currentDate, setCurrentDate] = useState(new Date());
   const [payments, setPayments] = useState({});
   const [purchasers, setPurchasers] = useState({});
@@ -99,7 +213,7 @@ export default function App() {
   const ADMIN_PIN = "6866";
 
   const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
-  const currentMonthName = monthNames[currentDate.getMonth()];
+  const currentMonthName = monthNames[lang][currentDate.getMonth()];
   const currentYear = currentDate.getFullYear();
 
   const monthPayments = payments[monthKey] || {};
@@ -115,6 +229,9 @@ export default function App() {
 
   const currentPurchaserId = purchasers[monthKey] || "";
   const currentTicketNumber = ticketNumbers[monthKey] || "";
+
+  const getMemberName = (member) =>
+    lang === "ML" ? member.name : member.enName;
 
   useEffect(() => {
     if (!db) return;
@@ -200,43 +317,56 @@ export default function App() {
     }
   };
 
-  // FULLY FIXED WHATSAPP SHARE
   const handleWhatsAppShare = () => {
     const paidNames = defaultMembers
       .filter((m) => monthPayments[m.id])
-      .map((m) => m.name)
+      .map((m) => getMemberName(m))
       .join(", ");
     const unpaidNames = defaultMembers
       .filter((m) => !monthPayments[m.id])
-      .map((m) => m.name)
+      .map((m) => getMemberName(m))
       .join(", ");
-    const purchaserName =
-      defaultMembers.find((m) => m.id === currentPurchaserId)?.name ||
-      "ആരുമില്ല";
-    const tNumber = currentTicketNumber || "എടുത്തിട്ടില്ല";
+    const purchaser = defaultMembers.find((m) => m.id === currentPurchaserId);
+    const purchaserName = purchaser ? getMemberName(purchaser) : T[lang].noOne;
+    const tNumber = currentTicketNumber || T[lang].notTaken;
 
-    const message =
-      `${EMOJI.moneyBag} *കോടീശ്വരൻ പ്ലാൻ: ${currentMonthName} ${currentYear}* ${EMOJI.moneyBag}\n\n` +
-      `${EMOJI.cash} *പിരിവ്:* ${totalCollected}/500 AED\n` +
-      `${EMOJI.user} *ടിക്കറ്റ് എടുക്കുന്നത്:* ${purchaserName}\n` +
-      `${EMOJI.ticket} *ലോട്ടറി നമ്പർ:* ${tNumber}\n\n` +
-      `${EMOJI.check} *കാശ് തന്നവർ:*\n${paidNames || "ആരും തന്നിട്ടില്ല"}\n\n` +
-      `${EMOJI.alert} *മുങ്ങി നടക്കുന്നവർ:*\n${
-        unpaidNames || `ആരുമില്ല, എല്ലാവരും സെറ്റ്! ${EMOJI.party}`
-      }`;
+    const t1 = encodeURIComponent(
+      `*${T[lang].waShareLine1} ${currentMonthName} ${currentYear}*`
+    );
+    const t2 = encodeURIComponent(
+      `*${T[lang].waShareLine2}* ${totalCollected}/500 AED`
+    );
+    const t3 = encodeURIComponent(`*${T[lang].waShareLine3}* ${purchaserName}`);
+    const t4 = encodeURIComponent(`*${T[lang].waShareLine4}* ${tNumber}`);
+    const t5 = encodeURIComponent(
+      `*${T[lang].waShareLine5}*\n${paidNames || T[lang].nobodyPaid} `
+    );
+    const t6 = encodeURIComponent(
+      `*${T[lang].waShareLine6}*\n${
+        unpaidNames || `${T[lang].everybodyPaid} `
+      } `
+    );
 
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
+    const finalMessage =
+      `${EMOJI.moneyBag} ${t1} ${EMOJI.moneyBag}%0A%0A` +
+      `${EMOJI.cash} ${t2}%0A` +
+      `${EMOJI.user} ${t3}%0A` +
+      `${EMOJI.ticket} ${t4}%0A%0A` +
+      `${EMOJI.check} ${t5}${paidNames ? "" : EMOJI.tearSmile}%0A%0A` +
+      `${EMOJI.alert} ${t6}${unpaidNames ? "" : EMOJI.party}`;
+
+    window.open(`https://wa.me/?text=${finalMessage}`, "_blank");
   };
 
-  // FULLY FIXED WHATSAPP REMINDER
   const handleWhatsAppReminder = () => {
-    const message =
-      `${EMOJI.speaker} *കോടീശ്വരൻ പ്ലാൻ* ${EMOJI.moneyBag}\n\n` +
-      `ഈ മാസത്തെ പിരിവിനുള്ള സമയം ആയതായി അറിയിക്കുന്നു ${EMOJI.flyingMoney}${EMOJI.runner}`;
+    const t1 = encodeURIComponent(`*${T[lang].waRemLine1}*`);
+    const t2 = encodeURIComponent(`${T[lang].waRemLine2} `);
 
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
+    const finalMessage =
+      `${EMOJI.speaker} ${t1} ${EMOJI.moneyBag}%0A%0A` +
+      `${t2}${EMOJI.flyingMoney}${EMOJI.runner}`;
+
+    window.open(`https://wa.me/?text=${finalMessage}`, "_blank");
   };
 
   const renderHistory = () => {
@@ -257,11 +387,9 @@ export default function App() {
         <div className="flex flex-col items-center justify-center py-20 px-6 text-center text-slate-500">
           <CalendarDays className="w-16 h-16 mb-4 text-slate-300" />
           <h2 className="text-xl font-bold text-slate-700 mb-2">
-            ശൂന്യം... മഹാ ശൂന്യം! 🤷‍♂️
+            {T[lang].emptyHistoryTitle}
           </h2>
-          <p className="text-sm">
-            ആദ്യം വല്ലതും പിരിവിട്, എന്നിട്ട് ചരിത്രം അന്വേഷിക്കാം.
-          </p>
+          <p className="text-sm">{T[lang].emptyHistoryDesc}</p>
         </div>
       );
     }
@@ -269,7 +397,7 @@ export default function App() {
     return (
       <div className="px-6 py-6 pb-24">
         <h2 className="text-2xl font-extrabold text-slate-900 mb-6">
-          പഴയ കഥകൾ 📜
+          {T[lang].historyTitle}
         </h2>
         <div className="space-y-4">
           {sortedKeys.map((key) => {
@@ -278,11 +406,14 @@ export default function App() {
               Boolean
             ).length;
             const collected = pCount * 50;
-            const purchaser =
-              defaultMembers.find((m) => m.id === purchasers[key])?.name ||
-              "ആളില്ല";
-            const tNumber = ticketNumbers[key] || "തന്നിട്ടില്ല";
-            const purchaseMonthDisplay = `${monthNames[month]} ${year}`;
+            const purchaserInfo = defaultMembers.find(
+              (m) => m.id === purchasers[key]
+            );
+            const purchaser = purchaserInfo
+              ? getMemberName(purchaserInfo)
+              : T[lang].noOne;
+            const tNumber = ticketNumbers[key] || T[lang].notTaken;
+            const purchaseMonthDisplay = `${monthNames[lang][month]} ${year}`;
 
             return (
               <div
@@ -295,7 +426,7 @@ export default function App() {
               >
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-lg text-slate-800">
-                    പിരിച്ചത്: {monthNames[month]}
+                    {T[lang].historyCollectedTitle} {monthNames[lang][month]}
                   </h3>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -313,7 +444,7 @@ export default function App() {
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <CalendarCheck className="w-4 h-4 text-emerald-500" />
                       <span className="font-semibold text-slate-700">
-                        എടുത്ത മാസം:
+                        {T[lang].historyMonthTaken}
                       </span>
                     </div>
                     <span className="text-sm font-bold text-emerald-700 bg-emerald-100/50 px-2 py-0.5 rounded">
@@ -325,7 +456,7 @@ export default function App() {
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <Users className="w-4 h-4 text-slate-400" />
                       <span className="font-semibold text-slate-700">
-                        എടുത്തവൻ :
+                        {T[lang].historyBuyer}
                       </span>
                     </div>
                     <span className="text-sm font-medium text-slate-800">
@@ -337,12 +468,12 @@ export default function App() {
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <Hash className="w-4 h-4 text-slate-400" />
                       <span className="font-semibold text-slate-700">
-                        ഭാഗ्य നമ്പർ:
+                        {T[lang].historyLotteryNum}
                       </span>
                     </div>
                     <span
                       className={
-                        tNumber === "തന്നിട്ടില്ല"
+                        tNumber === T[lang].notTaken
                           ? "text-xs text-slate-400 italic"
                           : "text-sm text-slate-800 font-mono font-bold"
                       }
@@ -367,18 +498,34 @@ export default function App() {
           <div className="px-6 pt-8 pb-6 flex items-start justify-between relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-emerald-100/50 to-transparent -z-10"></div>
 
-            <div className="flex flex-col gap-2 relative z-10">
+            <div className="flex flex-col gap-2 relative z-10 w-full">
               <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 tracking-tight drop-shadow-sm pb-1">
-                കോടീശ്വരൻ പ്ലാൻ 💰
+                {T[lang].appTitle}
               </h1>
-              <div className="flex items-center">
-                <span className="bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-sm text-xs font-bold text-slate-600 flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-emerald-500" /> മാസപ്പടി
-                  പിരിവ്
-                </span>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <span className="bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-sm text-xs font-bold text-slate-600 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-emerald-500" />{" "}
+                    {T[lang].subtitle}
+                  </span>
+
+                  {/* LANGUAGE SWITCH BUTTON */}
+                  <button
+                    onClick={() => setLang(lang === "ML" ? "EN" : "ML")}
+                    className="bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-sm text-xs font-bold text-emerald-600 flex items-center gap-1.5 hover:bg-emerald-50 transition-colors"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-emerald-500" />{" "}
+                    {lang === "ML" ? "EN" : "ML"}
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
+        )}
 
+        {/* ADMIN TOGGLE SECTION */}
+        {activeView === "dashboard" && (
+          <div className="px-6 pb-4">
             <button
               onClick={() =>
                 isAdmin ? setIsAdmin(false) : setShowPinModal(true)
@@ -394,10 +541,11 @@ export default function App() {
               ) : (
                 <Lock className="w-4 h-4 text-slate-400" />
               )}
-              {isAdmin ? "മുതലാളി മോഡ് 🕶️" : "കാഴ്ചക്കാരൻ 👁️"}
+              {isAdmin ? T[lang].bossMode : T[lang].viewerMode}
             </button>
           </div>
         )}
+
         {/* END HEADER SECTION */}
 
         {activeView === "history" ? (
@@ -441,22 +589,14 @@ export default function App() {
                     </span>
                   </div>
                   <p className="text-white/80 text-sm font-bold uppercase tracking-wider">
-                    AED കിട്ടി
+                    {T[lang].collected}
                   </p>
                 </div>
 
                 <div className="relative z-10">
                   <div className="flex justify-between text-xs font-semibold mb-2 text-white/90 drop-shadow-sm">
-                    <span>
-                      {paidCount === 1
-                        ? "ഒരാൾ കാശ് തന്നു"
-                        : `${paidCount} പേർ കാശ് തന്നു`}
-                    </span>
-                    <span>
-                      {unpaidCount === 1
-                        ? "ഒരുത്തൻ മുങ്ങി നടക്കുന്നു"
-                        : `${unpaidCount} പേർ മുങ്ങി നടക്കുന്നു`}
-                    </span>
+                    <span>{T[lang].paidText(paidCount)}</span>
+                    <span>{T[lang].unpaidText(unpaidCount)}</span>
                   </div>
 
                   <div className="h-3 w-full bg-black/25 rounded-full overflow-hidden backdrop-blur-md shadow-inner">
@@ -469,8 +609,7 @@ export default function App() {
 
                 {isGoalReached && (
                   <div className="mt-5 bg-white/20 backdrop-blur-md border border-white/40 rounded-2xl p-3 flex items-center justify-center gap-2 animate-pulse text-white font-black text-sm shadow-lg">
-                    <Ticket className="w-5 h-5" /> കാശ് സെറ്റ്! വേഗം ടിക്കറ്റ്
-                    എടുക്കെടാ! 🏃‍♂️
+                    <Ticket className="w-5 h-5" /> {T[lang].goalReached}
                   </div>
                 )}
               </div>
@@ -484,7 +623,7 @@ export default function App() {
                   </div>
                   <div>
                     <p className="text-sm font-extrabold text-slate-800">
-                      ഇത്തവണ ടിക്കറ്റ് എടുക്കുന്നത് 🎯
+                      {T[lang].ticketBuyer}
                     </p>
                   </div>
                 </div>
@@ -494,10 +633,10 @@ export default function App() {
                   onChange={handlePurchaserChange}
                   className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[140px] disabled:opacity-60 cursor-pointer shadow-sm"
                 >
-                  <option value="">ആരെടാ അവൻ...</option>
+                  <option value="">{T[lang].buyerPlaceholder}</option>
                   {defaultMembers.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.name}
+                      {getMemberName(m)}
                     </option>
                   ))}
                 </select>
@@ -510,7 +649,7 @@ export default function App() {
                   </div>
                   <div>
                     <p className="text-sm font-extrabold text-slate-800">
-                      ലോട്ടറി നമ്പർ
+                      {T[lang].lotteryNumber}
                     </p>
                   </div>
                 </div>
@@ -519,8 +658,8 @@ export default function App() {
                   disabled={!isAdmin}
                   placeholder={
                     isAdmin
-                      ? "നമ്പർ അടിക്ക് ബ്രോ..."
-                      : "കൈ വെക്കരുത്! ലോക്കാണ് 🔒"
+                      ? T[lang].numberPlaceholderAdmin
+                      : T[lang].numberPlaceholderViewer
                   }
                   value={currentTicketNumber}
                   onChange={handleTicketNumberChange}
@@ -532,10 +671,10 @@ export default function App() {
             <div className="px-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-black text-slate-800">
-                  ആരൊക്കെ കാശ് തന്നു? 🧐
+                  {T[lang].whoPaidTitle}
                 </h3>
                 <span className="text-xs font-bold text-slate-400 bg-slate-200/50 px-2 py-1 rounded-lg">
-                  {paidCount}/10 പേർ
+                  {T[lang].peopleCount(paidCount)}
                 </span>
               </div>
               <div className="space-y-3">
@@ -562,7 +701,7 @@ export default function App() {
                                 : "bg-slate-100 text-slate-400"
                             }`}
                           >
-                            {Array.from(member.name)[0]}
+                            {Array.from(getMemberName(member))[0]}
                           </div>
                           {isPurchaser && (
                             <div className="absolute -bottom-1.5 -right-1.5 bg-gradient-to-br from-amber-300 to-amber-500 p-1.5 rounded-xl border-2 border-white shadow-sm transform rotate-12">
@@ -576,7 +715,7 @@ export default function App() {
                               isPaid ? "text-emerald-950" : "text-slate-700"
                             }`}
                           >
-                            {member.name}
+                            {getMemberName(member)}
                           </p>
                           <p
                             className={`text-sm font-bold ${
@@ -608,7 +747,7 @@ export default function App() {
                 className="flex-1 bg-[#25D366] text-white font-extrabold py-3 px-2 rounded-[1.25rem] hover:bg-[#128C7E] transition-all shadow-lg shadow-[#25D366]/30 active:scale-95 flex flex-col items-center justify-center gap-1.5 text-[11px] sm:text-xs text-center leading-tight"
               >
                 <MessageCircle className="w-5 h-5" />
-                സ്റ്റാറ്റസ് ഇടുക 📲
+                {T[lang].shareStatus}
               </button>
 
               <button
@@ -616,7 +755,7 @@ export default function App() {
                 className="flex-1 bg-amber-500 text-white font-extrabold py-3 px-2 rounded-[1.25rem] hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30 active:scale-95 flex flex-col items-center justify-center gap-1.5 text-[11px] sm:text-xs text-center leading-tight"
               >
                 <Bell className="w-5 h-5" />
-                ഓർമ്മിപ്പിക്കുക 📢
+                {T[lang].sendReminder}
               </button>
             </div>
           </div>
@@ -627,7 +766,7 @@ export default function App() {
             <div className="bg-white rounded-[2rem] p-7 w-full max-w-xs shadow-2xl animate-in fade-in zoom-in-95 duration-200 border border-slate-100">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="font-black text-xl text-slate-900">
-                  ആരാടാ നീ? 🤨
+                  {T[lang].modalTitle}
                 </h3>
                 <button
                   onClick={() => {
@@ -640,7 +779,7 @@ export default function App() {
                 </button>
               </div>
               <p className="text-sm font-medium text-slate-500 mb-6">
-                മുതലാളി ആണെങ്കിൽ രഹസ്യ നമ്പർ അടിക്ക്.
+                {T[lang].modalDesc}
               </p>
               <form onSubmit={handlePinSubmit} className="space-y-5">
                 <div>
@@ -651,13 +790,13 @@ export default function App() {
                     inputMode="numeric"
                     value={pinInput}
                     onChange={(e) => setPinInput(e.target.value)}
-                    placeholder="••••"
+                    placeholder={T[lang].pinPlaceholder}
                     className="w-full text-center tracking-[0.5em] text-3xl p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-inner"
                     autoFocus
                   />
                   {pinError && (
                     <p className="text-xs font-bold text-red-500 text-center mt-3 bg-red-50 py-1.5 rounded-lg border border-red-100">
-                      അളിയാ.. നമ്പർ തെറ്റി! കള്ളനാണോ? 🚨
+                      {T[lang].pinError}
                     </p>
                   )}
                 </div>
@@ -665,7 +804,7 @@ export default function App() {
                   type="submit"
                   className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black py-4 rounded-2xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/30 active:scale-95 text-sm"
                 >
-                  തുറക്കടാ കുട്ടാ🚪
+                  {T[lang].unlockBtn}
                 </button>
               </form>
             </div>
@@ -687,7 +826,7 @@ export default function App() {
               }`}
             />
             <span className="text-[10px] font-extrabold uppercase tracking-widest">
-              തറവാട്
+              {T[lang].navHome}
             </span>
           </button>
 
@@ -705,7 +844,7 @@ export default function App() {
               }`}
             />
             <span className="text-[10px] font-extrabold uppercase tracking-widest">
-              ചരിത്രം
+              {T[lang].navHistory}
             </span>
           </button>
         </div>
