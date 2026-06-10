@@ -186,7 +186,7 @@ export default function App() {
     }
   };
 
-  // STATUS SHARE WITH EMOJIS
+  // STATUS SHARE WITH SAFE EMOJIS
   const handleWhatsAppShare = () => {
     const paidNames = defaultMembers
       .filter((m) => monthPayments[m.id])
@@ -201,32 +201,29 @@ export default function App() {
       "ആരുമില്ല";
     const tNumber = currentTicketNumber || "എടുത്തിട്ടില്ല";
 
+    // Used fully supported, basic emojis here
     const message =
       `💰 *കോടീശ്വരൻ പ്ലാൻ: ${currentMonthName} ${currentYear}* 💰\n\n` +
-      `📊 *പിരിവ്:* ${totalCollected}/500 AED\n` +
-      `🎯 *ടിക്കറ്റ് എടുക്കുന്നത്:* ${purchaserName}\n` +
+      `💵 *പിരിവ്:* ${totalCollected}/500 AED\n` +
+      `👤 *എടുക്കുന്നത്:* ${purchaserName}\n` +
       `🎫 *ലോട്ടറി നമ്പർ:* ${tNumber}\n\n` +
-      `✅ *കാശ് തന്നവർ:*\n${paidNames || "ആരും തന്നിട്ടില്ല 🥲"}\n\n` +
+      `✅ *കാശ് തന്നവർ:*\n${paidNames || "ആരും തന്നിട്ടില്ല"}\n\n` +
       `🚨 *മുങ്ങി നടക്കുന്നവർ:*\n${
-        unpaidNames || "ആരുമില്ല, എല്ലാവരും സെറ്റ്! 🎉"
+        unpaidNames || "ആരുമില്ല, എല്ലാവരും സെറ്റ്!"
       }`;
 
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
-      message
-    )}`;
+    // Changed to wa.me which encodes linebreaks more reliably
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   };
 
-  // NEW REMINDER MESSAGE
+  // SHORT REMINDER MESSAGE
   const handleWhatsAppReminder = () => {
     const message =
-      `📢 *അലർട്ട്! മാസപ്പടി ഓർമ്മപ്പെടുത്തൽ!* 📢\n\n` +
-      `മക്കളേ, മാസം മാറി! ഈ മാസത്തെ കോടീശ്വരൻ പ്ലാൻ (50 AED) പിരിവ് തുടങ്ങിയിട്ടുണ്ട്.\n\n` +
-      `മുങ്ങി നടക്കാതെ വേഗം കാശ് അടക്കുക! 💸🏃‍♂️`;
+      `📢 *കോടീശ്വരൻ പ്ലാൻ* 💰\n\n` +
+      `ഈ മാസത്തെ പിരിവിനുള്ള സമയം ആയതായി അറിയിക്കുന്നു 💸`;
 
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
-      message
-    )}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   };
 
