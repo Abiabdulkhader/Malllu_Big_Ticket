@@ -88,6 +88,7 @@ export default function App() {
 
   const monthPayments = payments[monthKey] || {};
   const paidCount = Object.values(monthPayments).filter(Boolean).length;
+  const unpaidCount = 10 - paidCount;
   const totalCollected = paidCount * 50;
   const targetAmount = 500;
   const progressPercent = (totalCollected / targetAmount) * 100;
@@ -375,14 +376,22 @@ export default function App() {
                     </span>
                   </div>
                   <p className="text-emerald-100 text-sm font-bold uppercase tracking-wider">
-                    AEDആയിട്ടുണ്ട്
+                    AED പോക്കറ്റിൽ എത്തി
                   </p>
                 </div>
 
                 <div className="relative z-10">
                   <div className="flex justify-between text-xs font-semibold mb-2 text-emerald-50 drop-shadow-sm">
-                    <span>{paidCount} അവന്മാർ കാശ് തന്നു</span>
-                    <span>{10 - paidCount} പേർ മുങ്ങി നടക്കുന്നു</span>
+                    <span>
+                      {paidCount === 1
+                        ? "ഒരാൾ കാശ് തന്നു"
+                        : `${paidCount} പേർ കാശ് തന്നു`}
+                    </span>
+                    <span>
+                      {unpaidCount === 1
+                        ? "ഒരുത്തൻ മുങ്ങി നടക്കുന്നു"
+                        : `${unpaidCount} പേർ മുങ്ങി നടക്കുന്നു`}
+                    </span>
                   </div>
                   <div className="h-3 w-full bg-emerald-900/60 rounded-full overflow-hidden backdrop-blur-md shadow-inner">
                     <div
@@ -394,8 +403,8 @@ export default function App() {
 
                 {isGoalReached && (
                   <div className="mt-5 bg-emerald-500/30 backdrop-blur-md border border-emerald-400/50 rounded-2xl p-3 flex items-center justify-center gap-2 animate-pulse text-amber-300 font-black text-sm shadow-lg">
-                    <Ticket className="w-5 h-5" /> കാശ് സെറ്റ്! പോയി
-                    ടിക്കറ്റെടുക്ക് കുട്ടാ 🏃‍♂️
+                    <Ticket className="w-5 h-5" /> കാശ് സെറ്റ്! പോയി ടിക്കറ്റ്
+                    എടുക്കെടാ! 🏃‍♂️
                   </div>
                 )}
               </div>
@@ -444,7 +453,7 @@ export default function App() {
                   disabled={!isAdmin}
                   placeholder={
                     isAdmin
-                      ? "നമ്പർ അടിക്ക് മോനെ..."
+                      ? "നമ്പർ അടിക്ക് ബ്രോ..."
                       : "കൈ വെക്കരുത്! ലോക്കാണ് 🔒"
                   }
                   value={currentTicketNumber}
@@ -563,7 +572,7 @@ export default function App() {
                   />
                   {pinError && (
                     <p className="text-xs font-bold text-red-500 text-center mt-3 bg-red-50 py-1.5 rounded-lg border border-red-100">
-                      നമ്പർ തെറ്റി! മൈരേ..🚨
+                      അളിയാ.. നമ്പർ തെറ്റി! കള്ളനാണോ? 🚨
                     </p>
                   )}
                 </div>
