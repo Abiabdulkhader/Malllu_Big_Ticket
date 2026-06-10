@@ -15,6 +15,7 @@ import {
   CalendarCheck,
   Lock,
   Unlock,
+  MessageCircle,
 } from "lucide-react";
 
 import { initializeApp } from "firebase/app";
@@ -181,6 +182,33 @@ export default function App() {
     }
   };
 
+  const handleWhatsAppShare = () => {
+    const paidNames = defaultMembers
+      .filter((m) => monthPayments[m.id])
+      .map((m) => m.name)
+      .join(", ");
+    const unpaidNames = defaultMembers
+      .filter((m) => !monthPayments[m.id])
+      .map((m) => m.name)
+      .join(", ");
+    const purchaserName =
+      defaultMembers.find((m) => m.id === currentPurchaserId)?.name || "ആളില്ല";
+    const tNumber = currentTicketNumber || "തന്നിട്ടില്ല";
+
+    const message =
+      `💰 *കോടീശ്വരൻ പ്ലാൻ: ${currentMonthName} ${currentYear}* 💰\n\n` +
+      `📊 പിരിവ്: ${totalCollected}/500 AED\n` +
+      `🎯 എടുക്കുന്നത്: ${purchaserName}\n` +
+      `🎫 ലോട്ടറി നമ്പർ: ${tNumber}\n\n` +
+      `✅ *കാശ് തന്നവർ:* ${paidNames || "ആരും തന്നിട്ടില്ല"}\n\n` +
+      `🚨 *മുങ്ങി നടക്കുന്നവർ:* ${
+        unpaidNames || "ആരുമില്ല, എല്ലാവരും സെറ്റ്!"
+      }`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   const renderHistory = () => {
     const allKeys = new Set([
       ...Object.keys(payments),
@@ -345,7 +373,7 @@ export default function App() {
         {activeView === "history" ? (
           renderHistory()
         ) : (
-          <div className="pb-24">
+          <div className="pb-28">
             <div className="px-6 mb-6">
               <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-3xl p-6 text-white shadow-xl shadow-emerald-900/20 relative overflow-hidden border border-emerald-500/30">
                 <Award className="absolute -right-6 -bottom-6 w-32 h-32 text-emerald-500/20 rotate-12" />
@@ -463,7 +491,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="px-6">
+            <div className="px-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-black text-slate-800">
                   ആരൊക്കെ കാശ് തന്നു? 🧐
@@ -533,6 +561,17 @@ export default function App() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* WHATSAPP SHARE BUTTON */}
+            <div className="px-6 mb-8">
+              <button
+                onClick={handleWhatsAppShare}
+                className="w-full bg-[#25D366] text-white font-black py-4 rounded-3xl hover:bg-[#128C7E] transition-all shadow-lg shadow-[#25D366]/30 active:scale-95 flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-6 h-6" />
+                ഗ്രൂപ്പിലേക്ക് ഇടുക 📲
+              </button>
             </div>
           </div>
         )}
