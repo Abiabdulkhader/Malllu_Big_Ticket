@@ -69,19 +69,18 @@ const monthNames = [
   "ഡിസംബർ",
 ];
 
-// RAW EMOJI HEX CODES - Bypasses CodeSandbox Encoding Bugs
-const emoji = {
-  moneyBag: "%F0%9F%92%B0",
-  cash: "%F0%9F%92%B5",
-  user: "%F0%9F%91%A4",
-  ticket: "%F0%9F%8E%AB",
-  check: "%E2%9C%85",
-  alert: "%F0%9F%9A%A8",
-  tearSmile: "%F0%9F%A5%B2",
-  party: "%F0%9F%8E%89",
-  speaker: "%F0%9F%93%A2",
-  flyingMoney: "%F0%9F%92%B8",
-  runner: "%F0%9F%8F%83",
+// GENERATING EMOJIS DYNAMICALLY TO PREVENT CODESANDBOX CORRUPTION
+const EMOJI = {
+  moneyBag: String.fromCodePoint(0x1f4b0),
+  cash: String.fromCodePoint(0x1f4b5),
+  user: String.fromCodePoint(0x1f464),
+  ticket: String.fromCodePoint(0x1f3ab),
+  check: String.fromCodePoint(0x2705),
+  alert: String.fromCodePoint(0x1f6a8),
+  party: String.fromCodePoint(0x1f389),
+  speaker: String.fromCodePoint(0x1f4e2),
+  flyingMoney: String.fromCodePoint(0x1f4b8),
+  runner: String.fromCodePoint(0x1f3c3),
 };
 
 export default function App() {
@@ -201,7 +200,7 @@ export default function App() {
     }
   };
 
-  // 100% BUG-FREE SHARE LINK GENERATION
+  // FULLY FIXED WHATSAPP SHARE
   const handleWhatsAppShare = () => {
     const paidNames = defaultMembers
       .filter((m) => monthPayments[m.id])
@@ -216,43 +215,28 @@ export default function App() {
       "ആരുമില്ല";
     const tNumber = currentTicketNumber || "എടുത്തിട്ടില്ല";
 
-    const t1 = encodeURIComponent(
-      `*കോടീശ്വരൻ പ്ലാൻ: ${currentMonthName} ${currentYear}*`
-    );
-    const t2 = encodeURIComponent(`*പിരിവ്:* ${totalCollected}/500 AED`);
-    const t3 = encodeURIComponent(`*ടിക്കറ്റ് എടുക്കുന്നത്:* ${purchaserName}`);
-    const t4 = encodeURIComponent(`*ലോട്ടറി നമ്പർ:* ${tNumber}`);
-    const t5 = encodeURIComponent(
-      `*കാശ് തന്നവർ:*\n${paidNames || "ആരും തന്നിട്ടില്ല"} `
-    );
-    const t6 = encodeURIComponent(
-      `*മുങ്ങി നടക്കുന്നവർ:*\n${unpaidNames || "ആരുമില്ല, എല്ലാവരും സെറ്റ്! "} `
-    );
+    const message =
+      `${EMOJI.moneyBag} *കോടീശ്വരൻ പ്ലാൻ: ${currentMonthName} ${currentYear}* ${EMOJI.moneyBag}\n\n` +
+      `${EMOJI.cash} *പിരിവ്:* ${totalCollected}/500 AED\n` +
+      `${EMOJI.user} *ടിക്കറ്റ് എടുക്കുന്നത്:* ${purchaserName}\n` +
+      `${EMOJI.ticket} *ലോട്ടറി നമ്പർ:* ${tNumber}\n\n` +
+      `${EMOJI.check} *കാശ് തന്നവർ:*\n${paidNames || "ആരും തന്നിട്ടില്ല"}\n\n` +
+      `${EMOJI.alert} *മുങ്ങി നടക്കുന്നവർ:*\n${
+        unpaidNames || `ആരുമില്ല, എല്ലാവരും സെറ്റ്! ${EMOJI.party}`
+      }`;
 
-    // Assembling raw hex codes with the encoded text
-    const finalMessage =
-      `${emoji.moneyBag} ${t1} ${emoji.moneyBag}%0A%0A` +
-      `${emoji.cash} ${t2}%0A` +
-      `${emoji.user} ${t3}%0A` +
-      `${emoji.ticket} ${t4}%0A%0A` +
-      `${emoji.check} ${t5}${paidNames ? "" : emoji.tearSmile}%0A%0A` +
-      `${emoji.alert} ${t6}${unpaidNames ? "" : emoji.party}`;
-
-    window.open(`https://wa.me/?text=${finalMessage}`, "_blank");
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
   };
 
-  // 100% BUG-FREE REMINDER LINK GENERATION
+  // FULLY FIXED WHATSAPP REMINDER
   const handleWhatsAppReminder = () => {
-    const t1 = encodeURIComponent(`*കോടീശ്വരൻ പ്ലാൻ*`);
-    const t2 = encodeURIComponent(
-      `ഈ മാസത്തെ പിരിവിനുള്ള സമയം ആയതായി അറിയിക്കുന്നു `
-    );
+    const message =
+      `${EMOJI.speaker} *കോടീശ്വരൻ പ്ലാൻ* ${EMOJI.moneyBag}\n\n` +
+      `ഈ മാസത്തെ പിരിവിനുള്ള സമയം ആയതായി അറിയിക്കുന്നു ${EMOJI.flyingMoney}${EMOJI.runner}`;
 
-    const finalMessage =
-      `${emoji.speaker} ${t1} ${emoji.moneyBag}%0A%0A` +
-      `${t2}${emoji.flyingMoney}${emoji.runner}`;
-
-    window.open(`https://wa.me/?text=${finalMessage}`, "_blank");
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   const renderHistory = () => {
