@@ -90,7 +90,7 @@ const monthNames = {
   ],
 };
 
-// TRANSLATION DICTIONARY WITH SMART COUNT LOGIC
+// TRANSLATION DICTIONARY
 const T = {
   ML: {
     appTitle: "കോടീശ്വരൻ പ്ലാൻ 💰",
@@ -111,14 +111,14 @@ const T = {
         ? "ഒരുത്തൻ മുങ്ങി നടക്കുന്നു"
         : `${c} പേർ മുങ്ങി നടക്കുന്നു`,
     goalReached: "കാശ് സെറ്റ്! വേഗം ടിക്കറ്റ് എടുക്കെടാ! 🏃‍♂️",
-    ticketBoughtMsg: "ടിക്കറ്റ് എടുത്തിട്ടുണ്ട്! 🤞",
+    ticketBoughtMsg: "ടിക്കറ്റ് സെറ്റ്! ഇനി കാത്തിരുന്ന് കാണാം! 🤞",
     ticketBuyer: "ഇത്തവണ ടിക്കറ്റ് എടുക്കുന്നത് 🎯",
     buyerPlaceholder: "ആരാ..",
-    lotteryNumber: "ടിക്കറ്റ് നമ്പർ",
+    lotteryNumber: "ലോട്ടറി നമ്പർ",
     numberPlaceholderAdmin: "...",
     numberPlaceholderViewer: "ലോക്കാണ് 🔒",
     whoPaidTitle: "ആരൊക്കെ കാശ് തന്നു? 🧐",
-    peopleCount: (c) => (c === 10 ? "എല്ലാവരും ക്യാഷ് തന്നു" : `${c}/10 പേർ`),
+    peopleCount: (c) => (c === 10 ? "എല്ലാവരും കൊടുത്തു" : `${c}/10 പേർ`),
     shareStatus: "സ്റ്റാറ്റസ് ഇടുക 📲",
     sendReminder: "ഓർമ്മിപ്പിക്കുക 📢",
     modalTitle: "ആരാടാ നീ? 🤨",
@@ -143,6 +143,7 @@ const T = {
     waShareLine2: "പിരിവ്:",
     waShareLine3: "ടിക്കറ്റ് എടുക്കുന്നത്:",
     waShareLine4: "ലോട്ടറി നമ്പർ:",
+    waShareLineTicketDate: "ടിക്കറ്റ് എടുത്ത തീയതി:", // NEW
     waShareLine5: "കാശ് തന്നവർ:",
     waShareLine6: "മുങ്ങി നടക്കുന്നവർ:",
     waRemLine1: "കോടീശ്വരൻ പ്ലാൻ",
@@ -200,6 +201,7 @@ const T = {
     waShareLine2: "Collection:",
     waShareLine3: "Ticket Buyer:",
     waShareLine4: "Lottery Number:",
+    waShareLineTicketDate: "Purchased Date:", // NEW
     waShareLine5: "Paid Members:",
     waShareLine6: "Absconding:",
     waRemLine1: "Millionaire Plan",
@@ -219,15 +221,19 @@ const EMOJI = {
   speaker: String.fromCodePoint(0x1f4e2),
   flyingMoney: String.fromCodePoint(0x1f4b8),
   runner: String.fromCodePoint(0x1f3c3),
+  calendar: String.fromCodePoint(0x1f4c5), // NEW EMOJI FOR DATE
 };
 
 export default function App() {
   const [lang, setLang] = useState("ML");
   const [darkMode, setDarkMode] = useState(true); // Premium dark mode as default
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // States
   const [payments, setPayments] = useState({});
   const [purchasers, setPurchasers] = useState({});
   const [ticketNumbers, setTicketNumbers] = useState({});
+  const [ticketDates, setTicketDates] = useState({}); // NEW DATABASE NODE
 
   const [activeView, setActiveView] = useState("dashboard");
   const [isViewFading, setIsViewFading] = useState(false);
@@ -269,19 +275,20 @@ export default function App() {
 
   useEffect(() => {
     if (!db) return;
-    const paymentsRef = ref(db, "payments");
-    onValue(paymentsRef, (snapshot) => {
+
+    // Listeners
+    onValue(ref(db, "payments"), (snapshot) => {
       if (snapshot.exists()) setPayments(snapshot.val());
     });
-
-    const purchasersRef = ref(db, "purchasers");
-    onValue(purchasersRef, (snapshot) => {
+    onValue(ref(db, "purchasers"), (snapshot) => {
       if (snapshot.exists()) setPurchasers(snapshot.val());
     });
-
-    const ticketsRef = ref(db, "ticketNumbers");
-    onValue(ticketsRef, (snapshot) => {
+    onValue(ref(db, "ticketNumbers"), (snapshot) => {
       if (snapshot.exists()) setTicketNumbers(snapshot.val());
+    });
+    // New listener for dates
+    onValue(ref(db, "ticketDates"), (snapshot) => {
+      if (snapshot.exists()) setTicketDates(snapshot.val());
     });
   }, []);
 
@@ -360,8 +367,27 @@ export default function App() {
     saveToFirebase("ticketNumbers", updatedTickets);
   };
 
+  // NEW LOGIC TO GRAB THE DATE WHEN THEY FINISH TYPING THE TICKET
   const handleTicketNumberBlur = () => {
-    if (isAdmin) showToast(T[lang].saved);
+    if (isAdmin) {
+      showToast(T[lang].saved);
+
+      const trimmedTicket = currentTicketNumber.trim();
+
+      // If they typed a ticket and there is NO date saved yet
+      if (trimmedTicket !== "" && !ticketDates[monthKey]) {
+        const today = new Date().toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
+        const updatedDates = { ...ticketDates, [monthKey]: today };
+        setTicketDates(updatedDates);
+        saveToFirebase("ticketDates", updatedDates);
+      }
+      // If they deleted the ticket, clear the date
+      else if (trimmedTicket === "" && ticketDates[monthKey]) {
+        const updatedDates = { ...ticketDates, [monthKey]: "" };
+        setTicketDates(updatedDates);
+        saveToFirebase("ticketDates", updatedDates);
+      }
+    }
   };
 
   const handlePinSubmit = (e) => {
@@ -379,6 +405,7 @@ export default function App() {
     }
   };
 
+  // UPDATED WHATSAPP SHARE TO INCLUDE TICKET DATE
   const handleWhatsAppShare = () => {
     vibrate();
     const paidNames = defaultMembers
@@ -392,6 +419,7 @@ export default function App() {
     const purchaser = defaultMembers.find((m) => m.id === currentPurchaserId);
     const purchaserName = purchaser ? getMemberName(purchaser) : T[lang].noOne;
     const tNumber = currentTicketNumber || T[lang].notTaken;
+    const tDate = ticketDates[monthKey] || T[lang].notTaken; // Fetches saved date
 
     const t1 = encodeURIComponent(
       `*${T[lang].waShareLine1} ${currentMonthName} ${currentYear}*`
@@ -401,6 +429,9 @@ export default function App() {
     );
     const t3 = encodeURIComponent(`*${T[lang].waShareLine3}* ${purchaserName}`);
     const t4 = encodeURIComponent(`*${T[lang].waShareLine4}* ${tNumber}`);
+    const tDateEncoded = encodeURIComponent(
+      `*${T[lang].waShareLineTicketDate}* ${tDate}`
+    ); // Added line
     const t5 = encodeURIComponent(
       `*${T[lang].waShareLine5}*\n${paidNames || T[lang].nobodyPaid} `
     );
@@ -410,11 +441,13 @@ export default function App() {
       } `
     );
 
+    // Assembly with new date line
     const finalMessage =
       `${EMOJI.moneyBag} ${t1} ${EMOJI.moneyBag}%0A%0A` +
       `${EMOJI.cash} ${t2}%0A` +
       `${EMOJI.user} ${t3}%0A` +
-      `${EMOJI.ticket} ${t4}%0A%0A` +
+      `${EMOJI.ticket} ${t4}%0A` +
+      `${EMOJI.calendar} ${tDateEncoded}%0A%0A` +
       `${EMOJI.check} ${t5}${paidNames ? "" : EMOJI.tearSmile}%0A%0A` +
       `${EMOJI.alert} ${t6}${unpaidNames ? "" : EMOJI.party}`;
 
@@ -438,6 +471,7 @@ export default function App() {
       ...Object.keys(payments),
       ...Object.keys(purchasers),
       ...Object.keys(ticketNumbers),
+      ...Object.keys(ticketDates),
     ]);
 
     const sortedKeys = Array.from(allKeys).sort((a, b) => {
