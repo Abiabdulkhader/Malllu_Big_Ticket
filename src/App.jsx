@@ -114,7 +114,7 @@ const T = {
     ticketBoughtMsg: "ടിക്കറ്റ് എടുത്തിട്ടുണ്ട്! 🤞",
     ticketBuyer: "ഇത്തവണ ടിക്കറ്റ് എടുക്കുന്നത് 🎯",
     buyerPlaceholder: "ആരാ..",
-    lotteryNumber: "ലോട്ടറി നമ്പർ",
+    lotteryNumber: "ടിക്കറ്റ് നമ്പർ",
     numberPlaceholderAdmin: "...",
     numberPlaceholderViewer: "ലോക്കാണ് 🔒",
     whoPaidTitle: "ആരൊക്കെ കാശ് തന്നു? 🧐",
