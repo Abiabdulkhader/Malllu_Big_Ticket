@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -236,6 +236,8 @@ export default function App() {
   const currentPurchaserId = purchasers[monthKey] || "";
   const currentTicketNumber = ticketNumbers[monthKey] || "";
 
+  const prevCollectedRef = useRef(totalCollected);
+
   const getMemberName = (member) => lang === "ML" ? member.name : member.enName;
 
   const vibrate = () => {
@@ -243,6 +245,39 @@ export default function App() {
       navigator.vibrate(15);
     }
   };
+
+  const playSound = (soundFile) => {
+    try {
+      const audio = new Audio(`/${soundFile}`);
+      audio.play().catch(e => console.log("Audio play blocked by browser interaction rules:", e));
+    } catch (error) {
+      console.log("Audio couldn't play", error);
+    }
+  };
+
+  // Intro Sound Effect
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+       playSound("intro.mp3");
+       document.removeEventListener("click", handleFirstInteraction);
+       document.removeEventListener("touchstart", handleFirstInteraction);
+    };
+    document.addEventListener("click", handleFirstInteraction);
+    document.addEventListener("touchstart", handleFirstInteraction);
+    
+    return () => {
+      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("touchstart", handleFirstInteraction);
+    };
+  }, []);
+
+  // Goal Reached Sound Effect (Wallet reaches 500)
+  useEffect(() => {
+    if (totalCollected === targetAmount && targetAmount > 0 && prevCollectedRef.current !== targetAmount) {
+       playSound("ok.mp3");
+    }
+    prevCollectedRef.current = totalCollected;
+  }, [totalCollected, targetAmount]);
 
   useEffect(() => {
     if (!db) return;
@@ -331,6 +366,7 @@ export default function App() {
   const togglePayment = (memberId) => {
     vibrate();
     if (!isAdmin) {
+      playSound("fail to edit.mp3");
       setShowPinModal(true);
       return;
     }
@@ -338,6 +374,12 @@ export default function App() {
       ...monthPayments,
       [memberId]: !monthPayments[memberId],
     };
+
+    // Play coin sound only if the payment was added (not removed)
+    if (updatedMonthPayments[memberId]) {
+      playSound("coin.mp3");
+    }
+
     const updatedPayments = { ...payments, [monthKey]: updatedMonthPayments };
     setPayments(updatedPayments);
     saveToFirebase("payments", updatedPayments, true);
@@ -346,6 +388,7 @@ export default function App() {
   const handlePurchaserChange = (e) => {
     vibrate();
     if (!isAdmin) {
+      playSound("fail to edit.mp3");
       setShowPinModal(true);
       return;
     }
@@ -356,6 +399,7 @@ export default function App() {
 
   const handleTicketNumberChange = (e) => {
     if (!isAdmin) {
+      playSound("fail to edit.mp3");
       setShowPinModal(true);
       return;
     }
@@ -387,12 +431,14 @@ export default function App() {
     e.preventDefault();
     vibrate();
     if (pinInput === ADMIN_PIN) {
+      playSound("Login.mp3");
       setIsAdmin(true);
       setShowPinModal(false);
       setPinInput("");
       setPinError(false);
       showToast(lang === "ML" ? "മുതലാളി എത്തി! 🕶️" : "Boss Unlocked! 🕶️");
     } else {
+      playSound("Fart.mp3");
       setPinError(true);
       setPinInput("");
     }
