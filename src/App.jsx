@@ -38,7 +38,7 @@ const firebaseConfig = {
   appId: "1:669211062312:web:45569b707aee6a628b451d",
 };
 
-let db: any = null;
+let db = null;
 try {
   const app = initializeApp(firebaseConfig);
   db = getDatabase(app);
@@ -59,7 +59,7 @@ const defaultMembers = [
   { id: "10", name: "മക്കു", enName: "Makku" },
 ];
 
-const monthNames: any = {
+const monthNames = {
   ML: [
     "ജനുവരി", "ഫെബ്രുവരി", "മാർച്ച്", "ഏപ്രിൽ", "മെയ്", "ജൂൺ",
     "ജൂലൈ", "ഓഗസ്റ്റ്", "സെപ്റ്റംബർ", "ഒക്ടോബർ", "നവംബർ", "ഡിസംബർ",
@@ -70,15 +70,15 @@ const monthNames: any = {
   ],
 };
 
-const T: any = {
+const T = {
   ML: {
     appTitle: "കോടീശ്വരൻ പ്ലാൻ 💰",
     subtitle: "മാസപ്പടി പിരിവ്",
     bossMode: "മുതലാളി മോഡ് 🕶️",
     viewerMode: "കാഴ്ചക്കാരൻ 👁️",
     collected: "AED കിട്ടി",
-    paidText: (c: number, t: number) => c === t && t > 0 ? "എല്ലാവരും കാശ് തന്നു" : (c === 1 ? "ഒരാൾ കാശ് തന്നു" : `${c} പേർ കാശ് തന്നു`),
-    unpaidText: (c: number) => c === 0 ? "ആരും മുങ്ങി നടക്കുന്നില്ല" : (c === 1 ? "ഒരുത്തൻ മുങ്ങി നടക്കുന്നു" : `${c} പേർ മുങ്ങി നടക്കുന്നു`),
+    paidText: (c, t) => c === t && t > 0 ? "എല്ലാവരും കാശ് തന്നു" : (c === 1 ? "ഒരാൾ കാശ് തന്നു" : `${c} പേർ കാശ് തന്നു`),
+    unpaidText: (c) => c === 0 ? "ആരും മുങ്ങി നടക്കുന്നില്ല" : (c === 1 ? "ഒരുത്തൻ മുങ്ങി നടക്കുന്നു" : `${c} പേർ മുങ്ങി നടക്കുന്നു`),
     goalReached: "കാശ് സെറ്റ്! വേഗം ടിക്കറ്റ് എടുക്കെടാ! 🏃‍♂️",
     ticketBoughtMsg: "ടിക്കറ്റ് സെറ്റ്! ഇനി കാത്തിരുന്ന് കാണാം! 🤞",
     ticketBuyer: "ഇത്തവണ ടിക്കറ്റ് എടുക്കുന്നത് 🎯",
@@ -87,7 +87,7 @@ const T: any = {
     numberPlaceholderAdmin: "...",
     numberPlaceholderViewer: "ലോക്കാണ് 🔒",
     whoPaidTitle: "ആരൊക്കെ കാശ് തന്നു? 🧐",
-    peopleCount: (c: number, t: number) => c === t && t > 0 ? "എല്ലാവരും കൊടുത്തു" : `${c}/${t} പേർ`,
+    peopleCount: (c, t) => c === t && t > 0 ? "എല്ലാവരും കൊടുത്തു" : `${c}/${t} പേർ`,
     shareStatus: "സ്റ്റാറ്റസ് ഇടുക 📲",
     sendReminder: "ഓർമ്മിപ്പിക്കുക 📢",
     modalTitle: "ആരാടാ നീ? 🤨",
@@ -129,8 +129,8 @@ const T: any = {
     bossMode: "Boss Mode 🕶️",
     viewerMode: "Viewer Mode 👁️",
     collected: "AED Collected",
-    paidText: (c: number, t: number) => c === t && t > 0 ? "Everyone gave cash" : (c === 1 ? "1 Person Paid" : `${c} People Paid`),
-    unpaidText: (c: number) => c === 0 ? "No one absconding" : (c === 1 ? "1 Person Absconding" : `${c} People Absconding`),
+    paidText: (c, t) => c === t && t > 0 ? "Everyone gave cash" : (c === 1 ? "1 Person Paid" : `${c} People Paid`),
+    unpaidText: (c) => c === 0 ? "No one absconding" : (c === 1 ? "1 Person Absconding" : `${c} People Absconding`),
     goalReached: "Cash Ready! Go buy the ticket! 🏃‍♂️",
     ticketBoughtMsg: "Ticket Secured! Fingers crossed! 🤞",
     ticketBuyer: "Buying ticket this month 🎯",
@@ -139,7 +139,7 @@ const T: any = {
     numberPlaceholderAdmin: "Enter number bro...",
     numberPlaceholderViewer: "Don't touch! Locked 🔒",
     whoPaidTitle: "Who all paid? 🧐",
-    peopleCount: (c: number, t: number) => c === t && t > 0 ? "Everyone Paid" : `${c}/${t} People`,
+    peopleCount: (c, t) => c === t && t > 0 ? "Everyone Paid" : `${c}/${t} People`,
     shareStatus: "Share Status 📲",
     sendReminder: "Send Reminder 📢",
     modalTitle: "Who are you? 🤨",
@@ -198,10 +198,10 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   
   const [members, setMembers] = useState(defaultMembers);
-  const [payments, setPayments] = useState<any>({});
-  const [purchasers, setPurchasers] = useState<any>({});
-  const [ticketNumbers, setTicketNumbers] = useState<any>({});
-  const [ticketDates, setTicketDates] = useState<any>({});
+  const [payments, setPayments] = useState({});
+  const [purchasers, setPurchasers] = useState({});
+  const [ticketNumbers, setTicketNumbers] = useState({});
+  const [ticketDates, setTicketDates] = useState({});
 
   const [activeView, setActiveView] = useState("dashboard");
   const [isViewFading, setIsViewFading] = useState(false);
@@ -236,7 +236,7 @@ export default function App() {
   const currentPurchaserId = purchasers[monthKey] || "";
   const currentTicketNumber = ticketNumbers[monthKey] || "";
 
-  const getMemberName = (member: any) => lang === "ML" ? member.name : member.enName;
+  const getMemberName = (member) => lang === "ML" ? member.name : member.enName;
 
   const vibrate = () => {
     if (typeof window !== "undefined" && navigator.vibrate) {
@@ -264,14 +264,14 @@ export default function App() {
     });
   }, []);
 
-  const showToast = (message: string) => {
+  const showToast = (message) => {
     setToast({ show: true, msg: message });
     setTimeout(() => {
       setToast({ show: false, msg: "" });
     }, 2500);
   };
 
-  const saveToFirebase = (path: string, data: any, triggerToast = false) => {
+  const saveToFirebase = (path, data, triggerToast = false) => {
     if (db) {
       set(ref(db, path), data).then(() => {
         if (triggerToast) showToast(T[lang].saved);
@@ -279,7 +279,7 @@ export default function App() {
     }
   };
 
-  const changeView = (newView: string) => {
+  const changeView = (newView) => {
     if (newView === activeView) return;
     vibrate();
     setIsViewFading(true);
@@ -289,7 +289,7 @@ export default function App() {
     }, 200);
   };
 
-  const handleAddMember = (e: any) => {
+  const handleAddMember = (e) => {
     e.preventDefault();
     vibrate();
     if (!newMemberML.trim() || !newMemberEN.trim()) return;
@@ -305,7 +305,7 @@ export default function App() {
     setShowAddMemberModal(false);
   };
 
-  const handleRemoveMember = (memberId: string, memberName: string) => {
+  const handleRemoveMember = (memberId, memberName) => {
     vibrate();
     const confirmMsg = lang === "ML" 
       ? `നിങ്ങൾക്ക് ശരിക്കും ${memberName} ഒഴിവാക്കണോ?` 
@@ -328,7 +328,7 @@ export default function App() {
     setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
-  const togglePayment = (memberId: string) => {
+  const togglePayment = (memberId) => {
     vibrate();
     if (!isAdmin) {
       setShowPinModal(true);
@@ -343,7 +343,7 @@ export default function App() {
     saveToFirebase("payments", updatedPayments, true);
   };
 
-  const handlePurchaserChange = (e: any) => {
+  const handlePurchaserChange = (e) => {
     vibrate();
     if (!isAdmin) {
       setShowPinModal(true);
@@ -354,7 +354,7 @@ export default function App() {
     saveToFirebase("purchasers", updatedPurchasers, true);
   };
 
-  const handleTicketNumberChange = (e: any) => {
+  const handleTicketNumberChange = (e) => {
     if (!isAdmin) {
       setShowPinModal(true);
       return;
@@ -383,7 +383,7 @@ export default function App() {
     }
   };
 
-  const handlePinSubmit = (e: any) => {
+  const handlePinSubmit = (e) => {
     e.preventDefault();
     vibrate();
     if (pinInput === ADMIN_PIN) {
@@ -686,7 +686,7 @@ export default function App() {
                     className={`text-sm font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[140px] disabled:opacity-60 cursor-pointer shadow-sm transition-all border ${darkMode ? "bg-slate-900 border-slate-700 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"}`}
                   >
                     <option value="">{T[lang].buyerPlaceholder}</option>
-                    {members.map((m: any) => (
+                    {members.map((m) => (
                       <option key={m.id} value={m.id}>{getMemberName(m)}</option>
                     ))}
                   </select>
@@ -724,7 +724,7 @@ export default function App() {
                 </div>
                 
                 <div className="space-y-3">
-                  {members.map((member: any) => {
+                  {members.map((member) => {
                     const isPaid = monthPayments[member.id] || false;
                     const isPurchaser = currentPurchaserId === member.id;
 
