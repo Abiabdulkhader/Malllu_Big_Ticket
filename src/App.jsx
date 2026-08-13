@@ -28,7 +28,6 @@ import {
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, onValue } from "firebase/database";
 
-// Your exact Firebase keys
 const firebaseConfig = {
   apiKey: "AIzaSyABFB2sfHwoaw4qiTNoqtOq5oWTvZPw32k",
   authDomain: "big-ticket-b0a81.firebaseapp.com",
@@ -47,7 +46,6 @@ try {
   console.error("Firebase Initialization Error:", error);
 }
 
-// Fallback Default Members (Used only if Firebase is completely empty)
 const defaultMembers = [
   { id: "1", name: "അബി", enName: "Abi" },
   { id: "2", name: "ദിലു", enName: "Dilu" },
@@ -72,7 +70,6 @@ const monthNames: any = {
   ],
 };
 
-// TRANSLATION DICTIONARY
 const T: any = {
   ML: {
     appTitle: "കോടീശ്വരൻ പ്ലാൻ 💰",
@@ -200,7 +197,6 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   
-  // States
   const [members, setMembers] = useState(defaultMembers);
   const [payments, setPayments] = useState<any>({});
   const [purchasers, setPurchasers] = useState<any>({});
@@ -216,7 +212,6 @@ export default function App() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinError, setPinError] = useState(false);
   
-  // New States for Adding a Member
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [newMemberML, setNewMemberML] = useState("");
   const [newMemberEN, setNewMemberEN] = useState("");
@@ -227,7 +222,6 @@ export default function App() {
   const currentMonthName = monthNames[lang][currentDate.getMonth()];
   const currentYear = currentDate.getFullYear();
 
-  // DYNAMIC TOTALS BASED ON MEMBERS LENGTH
   const totalMembersCount = members.length;
   const monthPayments = payments[monthKey] || {};
   const paidCount = Object.values(monthPayments).filter(Boolean).length;
@@ -561,7 +555,6 @@ export default function App() {
     <div className={`min-h-screen font-sans sm:py-8 selection:bg-emerald-200 transition-colors duration-500 ${darkMode ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
       <div className={`w-full sm:max-w-md mx-auto sm:shadow-2xl sm:shadow-emerald-900/5 border sm:rounded-[2.5rem] overflow-hidden relative min-h-screen sm:min-h-0 transition-colors duration-500 ${darkMode ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-100"}`}>
         
-        {/* MODERN HEADER SECTION */}
         {activeView === "dashboard" && (
           <div className="px-6 pt-8 pb-6 flex items-start justify-between relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
             <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-b to-transparent -z-10 transition-colors ${darkMode ? "from-emerald-900/20" : "from-emerald-100/50"}`}></div>
@@ -595,7 +588,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ADMIN TOGGLE SECTION */}
         {activeView === "dashboard" && (
           <div className="px-6 pb-4 animate-in fade-in duration-500">
             <button
@@ -612,13 +604,11 @@ export default function App() {
           </div>
         )}
 
-        {/* MAIN CONTENT AREA WITH SMOOTH FADE TRANSITION */}
         <div className={`transition-opacity duration-200 ${isViewFading ? "opacity-0" : "opacity-100"}`}>
           {activeView === "history" ? (
             renderHistory()
           ) : (
             <div className="pb-32">
-              {/* DYNAMIC DASHBOARD CARD WITH HOVER EFFECT */}
               <div className="px-6 mb-6">
                 <div
                   className="rounded-3xl p-6 text-white shadow-xl relative overflow-hidden transition-all duration-700 ease-out border border-white/20 hover:scale-[1.02]"
@@ -776,7 +766,6 @@ export default function App() {
                           </div>
 
                           <div className="flex-shrink-0 flex items-center gap-3">
-                            {/* DELETE BUTTON (ADMIN ONLY) */}
                             {isAdmin && (
                               <div 
                                 onClick={(e) => { e.stopPropagation(); handleRemoveMember(member.id, getMemberName(member)); }}
@@ -797,7 +786,6 @@ export default function App() {
                     );
                   })}
                   
-                  {/* ADD NEW MEMBER BUTTON (ADMIN ONLY) */}
                   {isAdmin && (
                     <button
                       onClick={() => { vibrate(); setShowAddMemberModal(true); }}
@@ -813,7 +801,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* WHATSAPP ACTION BUTTONS */}
               <div className="px-6 mb-8 flex flex-row gap-3 animate-in slide-in-from-bottom-10 fade-in duration-500 delay-300 fill-mode-both">
                 <button
                   onClick={handleWhatsAppShare}
@@ -835,7 +822,6 @@ export default function App() {
           )}
         </div>
 
-        {/* SLIDE-UP TOAST NOTIFICATION */}
         <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out ${toast.show ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95 pointer-events-none"}`}>
           <div className={`px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border backdrop-blur-md ${darkMode ? "bg-slate-100/90 text-slate-900 border-slate-200" : "bg-slate-900/90 text-white border-slate-800"}`}>
             <CheckCircle2 className={`w-5 h-5 ${darkMode ? "text-emerald-600" : "text-emerald-400"}`} />
@@ -843,7 +829,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* PIN UNLOCK MODAL */}
         {showPinModal && (
           <div className={`fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4 ${darkMode ? "bg-black/60" : "bg-slate-900/40"}`}>
             <div className={`rounded-[2rem] p-7 w-full max-w-xs shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-100"}`}>
@@ -877,7 +862,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ADD MEMBER MODAL (NEW) */}
         {showAddMemberModal && (
           <div className={`fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4 ${darkMode ? "bg-black/60" : "bg-slate-900/40"}`}>
             <div className={`rounded-[2rem] p-7 w-full max-w-xs shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-100"}`}>
@@ -911,7 +895,6 @@ export default function App() {
           </div>
         )}
 
-        {/* BOTTOM NAVIGATION BAR */}
         <div className={`fixed sm:absolute bottom-0 w-full sm:max-w-md backdrop-blur-xl border-t flex justify-around p-3 pb-safe shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)] z-40 transition-colors ${darkMode ? "bg-slate-900/90 border-slate-800" : "bg-white/80 border-slate-100"}`}>
           <button
             onClick={() => changeView("dashboard")}
