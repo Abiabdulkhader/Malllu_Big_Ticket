@@ -122,6 +122,12 @@ const T = {
     waRemLine1: "കോടീശ്വരൻ പ്ലാൻ",
     waRemLine2: "ഈ മാസത്തെ പിരിവിനുള്ള സമയം ആയതായി അറിയിക്കുന്നു",
     saved: "സെറ്റ്'സെറ്റ്.. !",
+    changePinBtn: "പിൻ മാറ്റുക",
+    recoveryPlaceholder: "റിക്കവറി കോഡ്",
+    newPinPlaceholder: "പുതിയ പിൻ (4 അക്കം)",
+    recoveryError: "തെറ്റായ കോഡ്! 🚫",
+    pinChangedMsg: "പിൻ വിജയകരമായി മാറ്റി! ✅",
+    cancelBtn: "ക്യാൻസൽ",
   },
   EN: {
     appTitle: "Millionaire Plan 💰",
@@ -174,6 +180,12 @@ const T = {
     waRemLine1: "Millionaire Plan",
     waRemLine2: "Time for this month's collection has arrived",
     saved: "Saved Successfully!",
+    changePinBtn: "Change PIN",
+    recoveryPlaceholder: "Recovery Code",
+    newPinPlaceholder: "New PIN (4 digits)",
+    recoveryError: "Invalid Code! 🚫",
+    pinChangedMsg: "PIN changed successfully! ✅",
+    cancelBtn: "Cancel",
   },
 };
 
@@ -202,6 +214,9 @@ export default function App() {
   const [purchasers, setPurchasers] = useState({});
   const [ticketNumbers, setTicketNumbers] = useState({});
   const [ticketDates, setTicketDates] = useState({});
+  
+  // Dynamic Admin PIN State
+  const [adminPin, setAdminPin] = useState("6866");
 
   const [activeView, setActiveView] = useState("dashboard");
   const [isViewFading, setIsViewFading] = useState(false);
@@ -212,11 +227,15 @@ export default function App() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinError, setPinError] = useState(false);
   
+  // PIN Change States
+  const [isChangingPin, setIsChangingPin] = useState(false);
+  const [recoveryCodeInput, setRecoveryCodeInput] = useState("");
+  const [newPinInput, setNewPinInput] = useState("");
+  const RECOVERY_CODE = "686671";
+  
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [newMemberML, setNewMemberML] = useState("");
   const [newMemberEN, setNewMemberEN] = useState("");
-
-  const ADMIN_PIN = "6866";
 
   const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
   const currentMonthName = monthNames[lang][currentDate.getMonth()];
@@ -297,6 +316,10 @@ export default function App() {
     onValue(ref(db, "ticketDates"), (snapshot) => {
       if (snapshot.exists()) setTicketDates(snapshot.val());
     });
+    // Fetch dynamic PIN from Firebase
+    onValue(ref(db, "adminPin"), (snapshot) => {
+      if (snapshot.exists()) setAdminPin(snapshot.val());
+    });
   }, []);
 
   const showToast = (message) => {
@@ -375,7 +398,6 @@ export default function App() {
       [memberId]: !monthPayments[memberId],
     };
 
-    // Play coin sound only if the payment was added (not removed)
     if (updatedMonthPayments[memberId]) {
       playSound("coin.mp3");
     }
@@ -430,7 +452,7 @@ export default function App() {
   const handlePinSubmit = (e) => {
     e.preventDefault();
     vibrate();
-    if (pinInput === ADMIN_PIN) {
+    if (pinInput === adminPin) {
       playSound("Login.mp3");
       setIsAdmin(true);
       setShowPinModal(false);
@@ -441,6 +463,24 @@ export default function App() {
       playSound("Fart.mp3");
       setPinError(true);
       setPinInput("");
+    }
+  };
+
+  const handlePinChangeSubmit = (e) => {
+    e.preventDefault();
+    vibrate();
+    if (recoveryCodeInput === RECOVERY_CODE && newPinInput.length >= 4) {
+      playSound("ok.mp3");
+      setAdminPin(newPinInput);
+      saveToFirebase("adminPin", newPinInput, false);
+      setIsChangingPin(false);
+      setRecoveryCodeInput("");
+      setNewPinInput("");
+      setPinError(false);
+      showToast(T[lang].pinChangedMsg);
+    } else {
+      playSound("Fart.mp3");
+      setPinError(true);
     }
   };
 
@@ -875,35 +915,76 @@ export default function App() {
           </div>
         </div>
 
+        {/* PIN UNLOCK MODAL */}
         {showPinModal && (
           <div className={`fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4 ${darkMode ? "bg-black/60" : "bg-slate-900/40"}`}>
             <div className={`rounded-[2rem] p-7 w-full max-w-xs shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-100"}`}>
               <div className="flex justify-between items-center mb-2">
                 <h3 className={`font-black text-xl ${darkMode ? "text-white" : "text-slate-900"}`}>{T[lang].modalTitle}</h3>
-                <button onClick={() => { vibrate(); setShowPinModal(false); setPinError(false); }} className={`p-1.5 rounded-full transition-colors ${darkMode ? "text-slate-500 hover:text-slate-300 bg-slate-700" : "text-slate-400 hover:text-slate-600 bg-slate-100"}`}>
+                <button onClick={() => { vibrate(); setShowPinModal(false); setPinError(false); setIsChangingPin(false); }} className={`p-1.5 rounded-full transition-colors ${darkMode ? "text-slate-500 hover:text-slate-300 bg-slate-700" : "text-slate-400 hover:text-slate-600 bg-slate-100"}`}>
                   <X className="w-5 h-5" />
                 </button>
               </div>
               <p className={`text-sm font-medium mb-6 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{T[lang].modalDesc}</p>
-              <form onSubmit={handlePinSubmit} className="space-y-5">
-                <div>
+              
+              {isChangingPin ? (
+                <form onSubmit={handlePinChangeSubmit} className="space-y-4">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={recoveryCodeInput}
+                    onChange={(e) => setRecoveryCodeInput(e.target.value)}
+                    placeholder={T[lang].recoveryPlaceholder}
+                    className={`w-full font-bold p-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner ${darkMode ? "bg-slate-900 border-slate-700 text-white focus:bg-slate-900" : "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white"}`}
+                    autoFocus
+                  />
                   <input
                     type="password"
                     maxLength={4}
                     pattern="[0-9]*"
                     inputMode="numeric"
-                    value={pinInput}
-                    onChange={(e) => setPinInput(e.target.value)}
-                    placeholder={T[lang].pinPlaceholder}
-                    className={`w-full text-center tracking-[0.5em] text-3xl p-4 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all shadow-inner ${darkMode ? "bg-slate-900 border-slate-700 text-white focus:bg-slate-900" : "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white"}`}
-                    autoFocus
+                    value={newPinInput}
+                    onChange={(e) => setNewPinInput(e.target.value)}
+                    placeholder={T[lang].newPinPlaceholder}
+                    className={`w-full font-bold p-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner ${darkMode ? "bg-slate-900 border-slate-700 text-white focus:bg-slate-900" : "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white"}`}
                   />
-                  {pinError && <p className={`text-xs font-bold text-center mt-3 py-1.5 rounded-lg border animate-in slide-in-from-top-2 ${darkMode ? "text-red-400 bg-red-500/10 border-red-500/20" : "text-red-500 bg-red-50 border-red-100"}`}>{T[lang].pinError}</p>}
-                </div>
-                <button type="submit" className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black py-4 rounded-2xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/30 active:scale-95 text-sm">
-                  {T[lang].unlockBtn}
-                </button>
-              </form>
+                  {pinError && <p className={`text-xs font-bold text-center mt-2 py-1.5 rounded-lg border animate-in slide-in-from-top-2 ${darkMode ? "text-red-400 bg-red-500/10 border-red-500/20" : "text-red-500 bg-red-50 border-red-100"}`}>{T[lang].recoveryError}</p>}
+                  
+                  <div className="flex gap-2 pt-2">
+                    <button type="button" onClick={() => { setIsChangingPin(false); setPinError(false); setRecoveryCodeInput(""); setNewPinInput(""); }} className={`w-1/3 font-bold py-3 rounded-xl transition-colors ${darkMode ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}>
+                      {T[lang].cancelBtn}
+                    </button>
+                    <button type="submit" disabled={!recoveryCodeInput || newPinInput.length < 4} className="w-2/3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-black py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all shadow-lg shadow-blue-500/30 active:scale-95 text-sm">
+                      {T[lang].changePinBtn}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <form onSubmit={handlePinSubmit} className="space-y-5">
+                    <div>
+                      <input
+                        type="password"
+                        maxLength={4}
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        value={pinInput}
+                        onChange={(e) => setPinInput(e.target.value)}
+                        placeholder={T[lang].pinPlaceholder}
+                        className={`w-full text-center tracking-[0.5em] text-3xl p-4 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all shadow-inner ${darkMode ? "bg-slate-900 border-slate-700 text-white focus:bg-slate-900" : "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white"}`}
+                        autoFocus
+                      />
+                      {pinError && <p className={`text-xs font-bold text-center mt-3 py-1.5 rounded-lg border animate-in slide-in-from-top-2 ${darkMode ? "text-red-400 bg-red-500/10 border-red-500/20" : "text-red-500 bg-red-50 border-red-100"}`}>{T[lang].pinError}</p>}
+                    </div>
+                    <button type="submit" className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black py-4 rounded-2xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/30 active:scale-95 text-sm">
+                      {T[lang].unlockBtn}
+                    </button>
+                  </form>
+                  <button type="button" onClick={() => { setIsChangingPin(true); setPinError(false); }} className={`w-full text-center text-xs font-bold mt-4 transition-colors ${darkMode ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"}`}>
+                    {T[lang].changePinBtn} 🔄
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
