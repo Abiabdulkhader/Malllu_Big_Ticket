@@ -132,7 +132,8 @@ const T = {
     pinChangedMsg: "പിൻ വിജയകരമായി മാറ്റി! ✅",
     cancelBtn: "ക്യാൻസൽ",
     quickJump: "പെട്ടെന്ന് തിരയാൻ",
-    goBtn: "പോവുക"
+    goBtn: "പോവുക",
+    thisMonth: "ഈ മാസം", // NEW TRANSLATION
   },
   EN: {
     appTitle: "Millionaire Plan 💰",
@@ -193,7 +194,8 @@ const T = {
     pinChangedMsg: "PIN changed successfully! ✅",
     cancelBtn: "Cancel",
     quickJump: "Quick Jump",
-    goBtn: "Go"
+    goBtn: "Go",
+    thisMonth: "This Month", // NEW TRANSLATION
   },
 };
 
@@ -243,7 +245,6 @@ export default function App() {
   const [newMemberML, setNewMemberML] = useState("");
   const [newMemberEN, setNewMemberEN] = useState("");
 
-  // Quick Jump States
   const [jumpMonth, setJumpMonth] = useState(currentDate.getMonth());
   const [jumpYear, setJumpYear] = useState(currentDate.getFullYear());
 
@@ -711,10 +712,22 @@ export default function App() {
                 {T[lang].appTitle}
               </h1>
               <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2">
+                {/* FLEX WRAP APPLIED HERE TO PREVENT CROWDING ON SMALL SCREENS */}
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className={`px-3 py-1.5 rounded-xl border shadow-sm text-xs font-bold flex items-center gap-1.5 hover:scale-105 transition-all ${darkMode ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-white border-slate-200/80 text-slate-600"}`}>
                     <Users className="w-3.5 h-3.5 text-emerald-500" /> {T[lang].subtitle}
                   </span>
+
+                  {/* THIS MONTH BUTTON */}
+                  <button
+                    onClick={() => {
+                      vibrate();
+                      setCurrentDate(new Date());
+                    }}
+                    className={`px-3 py-1.5 rounded-xl border shadow-sm text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all ${darkMode ? "bg-slate-800 border-slate-700 text-emerald-400 hover:bg-slate-700" : "bg-white border-slate-200/80 text-emerald-600 hover:bg-emerald-50"}`}
+                  >
+                    <CalendarCheck className="w-3.5 h-3.5 text-emerald-500" /> {T[lang].thisMonth}
+                  </button>
 
                   <button
                     onClick={() => { vibrate(); setLang(lang === "ML" ? "EN" : "ML"); }}
