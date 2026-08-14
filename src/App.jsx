@@ -133,7 +133,7 @@ const T = {
     cancelBtn: "ക്യാൻസൽ",
     quickJump: "പെട്ടെന്ന് തിരയാൻ",
     goBtn: "പോവുക",
-    thisMonth: "ഈ മാസം", // NEW TRANSLATION
+    thisMonth: "ഈ മാസം",
   },
   EN: {
     appTitle: "Millionaire Plan 💰",
@@ -195,7 +195,7 @@ const T = {
     cancelBtn: "Cancel",
     quickJump: "Quick Jump",
     goBtn: "Go",
-    thisMonth: "This Month", // NEW TRANSLATION
+    thisMonth: "This Month",
   },
 };
 
@@ -256,9 +256,50 @@ export default function App() {
   const currentPurchaserId = purchasers[monthKey] || "";
   const currentTicketNumber = ticketNumbers[monthKey] || "";
 
-  const visibleMembers = members.filter(
-    (m) => !m.archived || monthPayments[m.id] || currentPurchaserId === m.id
-  );
+  // 1. RECONSTRUCT GHOST MEMBERS (Brings Althaf back if he paid last month!)
+  const allMembersForView = [...members];
+  const ghostIds = new Set();
+  
+  Object.keys(monthPayments).forEach(id => {
+      if (monthPayments[id] && !members.find(m => m.id === id)) ghostIds.add(id);
+  });
+  if (currentPurchaserId && !members.find(m => m.id === currentPurchaserId)) {
+      ghostIds.add(currentPurchaserId);
+  }
+
+  ghostIds.forEach(id => {
+      const original = defaultMembers.find(m => m.id === id);
+      allMembersForView.push(
+          original 
+              ? { ...original, archived: true } 
+              : { id, name: T[lang].deletedMember, enName: T[lang].deletedMember, archived: true }
+      );
+  });
+
+  // 2. TIME TRAVEL FILTER (Hides Alu from past months) & SORTING
+  const viewedMonthTimestamp = new Date(currentYear, currentDate.getMonth() + 1, 0).getTime();
+
+  const visibleMembers = allMembersForView
+    .filter((m) => {
+      // Find exact join timestamp (New member IDs are literal timestamps)
+      const joinTime = m.joinedAt || (parseInt(m.id) > 1000000000000 ? parseInt(m.id) : 0);
+      
+      // Hide if they joined AFTER this specific month
+      if (joinTime > viewedMonthTimestamp) return false;
+
+      // Hide archived members ONLY if they didn't pay this month
+      if (m.archived && !monthPayments[m.id] && currentPurchaserId !== m.id) return false;
+
+      return true;
+    })
+    .sort((a, b) => {
+      const aPaid = monthPayments[a.id] ? 1 : 0;
+      const bPaid = monthPayments[b.id] ? 1 : 0;
+      if (aPaid !== bPaid) {
+        return bPaid - aPaid; // Pushes paid members to the very top!
+      }
+      return parseInt(a.id) - parseInt(b.id);
+    });
 
   const paidCount = Object.values(monthPayments).filter(Boolean).length;
   const unpaidCount = visibleMembers.length - paidCount;
@@ -370,7 +411,7 @@ export default function App() {
     if (!newMemberML.trim() || !newMemberEN.trim()) return;
     
     const newId = Date.now().toString();
-    const updatedMembers = [...members, { id: newId, name: newMemberML, enName: newMemberEN }];
+    const updatedMembers = [...members, { id: newId, name: newMemberML, enName: newMemberEN, joinedAt: Date.now() }];
     
     setMembers(updatedMembers);
     saveToFirebase("members", updatedMembers, true);
@@ -629,8 +670,15 @@ export default function App() {
               const pCount = Object.values(payments[key] || {}).filter(Boolean).length;
               const collected = pCount * 50;
               const historicalTarget = 500;
-              const purchaserInfo = members.find((m) => m.id === purchasers[key]);
-              const purchaser = purchaserInfo ? getMemberName(purchaserInfo) : (purchasers[key] ? T[lang].deletedMember : T[lang].noOne);
+              
+              // Restore Purchaser Name even if hard-deleted
+              let purchaserName = T[lang].noOne;
+              if (purchasers[key]) {
+                  const pId = purchasers[key];
+                  const pInfo = members.find(m => m.id === pId) || defaultMembers.find(m => m.id === pId);
+                  purchaserName = pInfo ? getMemberName(pInfo) : T[lang].deletedMember;
+              }
+
               const tNumber = ticketNumbers[key] || T[lang].notTaken;
               const purchaseMonthDisplay = `${monthNames[lang][month]} ${year}`;
 
@@ -677,7 +725,7 @@ export default function App() {
                         <Users className={`w-4 h-4 ${darkMode ? "text-slate-500" : "text-slate-400"}`} />
                         <span className="font-semibold">{T[lang].historyBuyer}</span>
                       </div>
-                      <span className={`text-sm font-medium ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{purchaser}</span>
+                      <span className={`text-sm font-medium ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{purchaserName}</span>
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -712,13 +760,11 @@ export default function App() {
                 {T[lang].appTitle}
               </h1>
               <div className="flex items-center justify-between w-full">
-                {/* FLEX WRAP APPLIED HERE TO PREVENT CROWDING ON SMALL SCREENS */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`px-3 py-1.5 rounded-xl border shadow-sm text-xs font-bold flex items-center gap-1.5 hover:scale-105 transition-all ${darkMode ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-white border-slate-200/80 text-slate-600"}`}>
                     <Users className="w-3.5 h-3.5 text-emerald-500" /> {T[lang].subtitle}
                   </span>
 
-                  {/* THIS MONTH BUTTON */}
                   <button
                     onClick={() => {
                       vibrate();
@@ -783,7 +829,6 @@ export default function App() {
                 >
                   <Award className="absolute -right-6 -bottom-6 w-32 h-32 text-white/10 rotate-12 transition-transform duration-700 hover:rotate-[24deg] hover:scale-110" />
 
-                  {/* SIMPLE DASHBOARD HEADER */}
                   <div className="flex items-center justify-between mb-8 relative z-10">
                     <button onClick={handlePrevMonth} className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm active:scale-90">
                       <ChevronLeft className="w-5 h-5 text-white" />
