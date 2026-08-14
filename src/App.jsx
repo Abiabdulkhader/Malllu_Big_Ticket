@@ -70,6 +70,8 @@ const monthNames = {
   ],
 };
 
+const yearsList = [2025, 2026, 2027, 2028, 2029, 2030];
+
 const T = {
   ML: {
     appTitle: "കോടീശ്വരൻ പ്ലാൻ 💰",
@@ -245,7 +247,6 @@ export default function App() {
   const currentPurchaserId = purchasers[monthKey] || "";
   const currentTicketNumber = ticketNumbers[monthKey] || "";
 
-  // PERFECT HISTORY FIX: We only show non-archived members OR members who paid this specific month
   const visibleMembers = members.filter(
     (m) => !m.archived || monthPayments[m.id] || currentPurchaserId === m.id
   );
@@ -253,7 +254,6 @@ export default function App() {
   const paidCount = Object.values(monthPayments).filter(Boolean).length;
   const unpaidCount = visibleMembers.length - paidCount;
   
-  // HARDCODED TICKET TARGET (Fixes the history calculation bug forever)
   const totalCollected = paidCount * 50;
   const targetAmount = 500; 
   
@@ -366,7 +366,6 @@ export default function App() {
     setShowAddMemberModal(false);
   };
 
-  // PERFECT HISTORY FIX: Soft Deleting prevents history from losing names or amounts
   const handleRemoveMember = (memberId, memberName) => {
     vibrate();
     const confirmMsg = lang === "ML" 
@@ -375,14 +374,12 @@ export default function App() {
       
     if (!window.confirm(confirmMsg)) return;
 
-    // Soft delete: Keep them in DB but mark as archived
     const updatedMembers = members.map((m) =>
       m.id === memberId ? { ...m, archived: true } : m
     );
     setMembers(updatedMembers);
     saveToFirebase("members", updatedMembers, false);
 
-    // Wipe their payment purely for the CURRENT active month so they instantly vanish
     const updatedMonthPayments = { ...monthPayments };
     if (updatedMonthPayments[memberId] !== undefined) {
       delete updatedMonthPayments[memberId];
@@ -585,7 +582,7 @@ export default function App() {
             const [year, month] = key.split("-").map(Number);
             const pCount = Object.values(payments[key] || {}).filter(Boolean).length;
             const collected = pCount * 50;
-            const historicalTarget = 500; // Fixed Target!
+            const historicalTarget = 500;
             const purchaserInfo = members.find((m) => m.id === purchasers[key]);
             const purchaser = purchaserInfo ? getMemberName(purchaserInfo) : (purchasers[key] ? T[lang].deletedMember : T[lang].noOne);
             const tNumber = ticketNumbers[key] || T[lang].notTaken;
@@ -727,14 +724,45 @@ export default function App() {
                 >
                   <Award className="absolute -right-6 -bottom-6 w-32 h-32 text-white/10 rotate-12 transition-transform duration-700 hover:rotate-[24deg] hover:scale-110" />
 
-                  <div className="flex items-center justify-between mb-8 relative z-10">
-                    <button onClick={handlePrevMonth} className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm active:scale-90">
+                  {/* MONTH & YEAR DROPDOWN HEADER */}
+                  <div className="flex items-center justify-between mb-8 relative z-10 gap-2">
+                    <button onClick={handlePrevMonth} className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm active:scale-90 flex-shrink-0">
                       <ChevronLeft className="w-5 h-5 text-white" />
                     </button>
-                    <h2 className="text-lg font-bold tracking-wide drop-shadow-md text-white animate-in slide-in-from-top-2 fade-in">
-                      {currentMonthName} {currentYear}
-                    </h2>
-                    <button onClick={handleNextMonth} className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm active:scale-90">
+
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={currentDate.getMonth()}
+                        onChange={(e) => {
+                          vibrate();
+                          setCurrentDate(new Date(currentDate.getFullYear(), parseInt(e.target.value), 1));
+                        }}
+                        className="bg-black/20 hover:bg-black/30 border border-white/30 text-white font-black text-sm rounded-xl px-2.5 py-1.5 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer transition-all shadow-inner [color-scheme:dark]"
+                      >
+                        {monthNames[lang].map((mName, idx) => (
+                          <option key={idx} value={idx} className="bg-slate-900 text-white font-bold">
+                            {mName}
+                          </option>
+                        ))}
+                      </select>
+
+                      <select
+                        value={currentDate.getFullYear()}
+                        onChange={(e) => {
+                          vibrate();
+                          setCurrentDate(new Date(parseInt(e.target.value), currentDate.getMonth(), 1));
+                        }}
+                        className="bg-black/20 hover:bg-black/30 border border-white/30 text-white font-black text-sm rounded-xl px-2.5 py-1.5 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer transition-all shadow-inner [color-scheme:dark]"
+                      >
+                        {yearsList.map((yr) => (
+                          <option key={yr} value={yr} className="bg-slate-900 text-white font-bold">
+                            {yr}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button onClick={handleNextMonth} className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm active:scale-90 flex-shrink-0">
                       <ChevronRight className="w-5 h-5 text-white" />
                     </button>
                   </div>
