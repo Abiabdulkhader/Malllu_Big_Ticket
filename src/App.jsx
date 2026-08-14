@@ -109,6 +109,7 @@ const T = {
     historyBuyer: "എടുത്തവൻ :",
     historyLotteryNum: "ഭാഗ്യ നമ്പർ:",
     noOne: "ആരുമില്ല",
+    deletedMember: "ഒഴിവാക്കപ്പെട്ട ആൾ",
     notTaken: "എടുത്തിട്ടില്ല",
     nobodyPaid: "ആരും തന്നിട്ടില്ല",
     everybodyPaid: "ആരുമില്ല, എല്ലാവരും സെറ്റ്!",
@@ -167,6 +168,7 @@ const T = {
     historyBuyer: "Buyer :",
     historyLotteryNum: "Lucky Number:",
     noOne: "No one",
+    deletedMember: "Deleted Member",
     notTaken: "Not updated",
     nobodyPaid: "Nobody paid yet",
     everybodyPaid: "No one, everyone is set!",
@@ -215,7 +217,6 @@ export default function App() {
   const [ticketNumbers, setTicketNumbers] = useState({});
   const [ticketDates, setTicketDates] = useState({});
   
-  // Dynamic Admin PIN State
   const [adminPin, setAdminPin] = useState("6866");
 
   const [activeView, setActiveView] = useState("dashboard");
@@ -227,7 +228,6 @@ export default function App() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinError, setPinError] = useState(false);
   
-  // PIN Change States
   const [isChangingPin, setIsChangingPin] = useState(false);
   const [recoveryCodeInput, setRecoveryCodeInput] = useState("");
   const [newPinInput, setNewPinInput] = useState("");
@@ -241,19 +241,25 @@ export default function App() {
   const currentMonthName = monthNames[lang][currentDate.getMonth()];
   const currentYear = currentDate.getFullYear();
 
-  const totalMembersCount = members.length;
   const monthPayments = payments[monthKey] || {};
-  const paidCount = Object.values(monthPayments).filter(Boolean).length;
-  const unpaidCount = totalMembersCount - paidCount;
-  const totalCollected = paidCount * 50;
-  const targetAmount = totalMembersCount * 50; 
-  
-  const progressPercent = targetAmount > 0 ? (totalCollected / targetAmount) * 100 : 0;
-  const isGoalReached = totalCollected === targetAmount && targetAmount > 0;
-  const progressHue = Math.max(0, (progressPercent / 100) * 120);
-
   const currentPurchaserId = purchasers[monthKey] || "";
   const currentTicketNumber = ticketNumbers[monthKey] || "";
+
+  // PERFECT HISTORY FIX: We only show non-archived members OR members who paid this specific month
+  const visibleMembers = members.filter(
+    (m) => !m.archived || monthPayments[m.id] || currentPurchaserId === m.id
+  );
+
+  const paidCount = Object.values(monthPayments).filter(Boolean).length;
+  const unpaidCount = visibleMembers.length - paidCount;
+  
+  // HARDCODED TICKET TARGET (Fixes the history calculation bug forever)
+  const totalCollected = paidCount * 50;
+  const targetAmount = 500; 
+  
+  const progressPercent = targetAmount > 0 ? (totalCollected / targetAmount) * 100 : 0;
+  const isGoalReached = totalCollected >= targetAmount && targetAmount > 0;
+  const progressHue = Math.max(0, (progressPercent / 100) * 120);
 
   const prevCollectedRef = useRef(totalCollected);
 
@@ -268,13 +274,12 @@ export default function App() {
   const playSound = (soundFile) => {
     try {
       const audio = new Audio(`/${soundFile}`);
-      audio.play().catch(e => console.log("Audio play blocked by browser interaction rules:", e));
+      audio.play().catch(e => console.log("Audio blocked by browser rules:", e));
     } catch (error) {
       console.log("Audio couldn't play", error);
     }
   };
 
-  // Intro Sound Effect
   useEffect(() => {
     const handleFirstInteraction = () => {
        playSound("intro.mp3");
@@ -290,7 +295,6 @@ export default function App() {
     };
   }, []);
 
-  // Goal Reached Sound Effect (Wallet reaches 500)
   useEffect(() => {
     if (totalCollected === targetAmount && targetAmount > 0 && prevCollectedRef.current !== targetAmount) {
        playSound("ok.mp3");
@@ -316,7 +320,6 @@ export default function App() {
     onValue(ref(db, "ticketDates"), (snapshot) => {
       if (snapshot.exists()) setTicketDates(snapshot.val());
     });
-    // Fetch dynamic PIN from Firebase
     onValue(ref(db, "adminPin"), (snapshot) => {
       if (snapshot.exists()) setAdminPin(snapshot.val());
     });
@@ -363,6 +366,7 @@ export default function App() {
     setShowAddMemberModal(false);
   };
 
+  // PERFECT HISTORY FIX: Soft Deleting prevents history from losing names or amounts
   const handleRemoveMember = (memberId, memberName) => {
     vibrate();
     const confirmMsg = lang === "ML" 
@@ -371,9 +375,23 @@ export default function App() {
       
     if (!window.confirm(confirmMsg)) return;
 
-    const updatedMembers = members.filter((m) => m.id !== memberId);
+    // Soft delete: Keep them in DB but mark as archived
+    const updatedMembers = members.map((m) =>
+      m.id === memberId ? { ...m, archived: true } : m
+    );
     setMembers(updatedMembers);
-    saveToFirebase("members", updatedMembers, true);
+    saveToFirebase("members", updatedMembers, false);
+
+    // Wipe their payment purely for the CURRENT active month so they instantly vanish
+    const updatedMonthPayments = { ...monthPayments };
+    if (updatedMonthPayments[memberId] !== undefined) {
+      delete updatedMonthPayments[memberId];
+      const updatedPayments = { ...payments, [monthKey]: updatedMonthPayments };
+      setPayments(updatedPayments);
+      saveToFirebase("payments", updatedPayments, true);
+    } else {
+      showToast(T[lang].saved);
+    }
   };
 
   const handlePrevMonth = () => {
@@ -486,11 +504,11 @@ export default function App() {
 
   const handleWhatsAppShare = () => {
     vibrate();
-    const paidNames = members
+    const paidNames = visibleMembers
       .filter((m) => monthPayments[m.id])
       .map((m) => getMemberName(m))
       .join(", ");
-    const unpaidNames = members
+    const unpaidNames = visibleMembers
       .filter((m) => !monthPayments[m.id])
       .map((m) => getMemberName(m))
       .join(", ");
@@ -567,9 +585,9 @@ export default function App() {
             const [year, month] = key.split("-").map(Number);
             const pCount = Object.values(payments[key] || {}).filter(Boolean).length;
             const collected = pCount * 50;
-            const historicalTarget = Object.keys(payments[key] || {}).length * 50 || 500;
+            const historicalTarget = 500; // Fixed Target!
             const purchaserInfo = members.find((m) => m.id === purchasers[key]);
-            const purchaser = purchaserInfo ? getMemberName(purchaserInfo) : T[lang].noOne;
+            const purchaser = purchaserInfo ? getMemberName(purchaserInfo) : (purchasers[key] ? T[lang].deletedMember : T[lang].noOne);
             const tNumber = ticketNumbers[key] || T[lang].notTaken;
             const purchaseMonthDisplay = `${monthNames[lang][month]} ${year}`;
 
@@ -596,7 +614,7 @@ export default function App() {
                         : darkMode ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
                     }`}
                   >
-                    {collected} / {historicalTarget > 0 ? historicalTarget : 500} AED
+                    {collected} / {historicalTarget} AED
                   </span>
                 </div>
 
@@ -731,7 +749,7 @@ export default function App() {
 
                   <div className="relative z-10">
                     <div className="flex justify-between text-xs font-semibold mb-2 text-white/90 drop-shadow-sm">
-                      <span>{T[lang].paidText(paidCount, totalMembersCount)}</span>
+                      <span>{T[lang].paidText(paidCount, visibleMembers.length)}</span>
                       <span>{T[lang].unpaidText(unpaidCount)}</span>
                     </div>
 
@@ -772,7 +790,7 @@ export default function App() {
                     className={`text-sm font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[140px] disabled:opacity-60 cursor-pointer shadow-sm transition-all border ${darkMode ? "bg-slate-900 border-slate-700 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"}`}
                   >
                     <option value="">{T[lang].buyerPlaceholder}</option>
-                    {members.map((m) => (
+                    {visibleMembers.map((m) => (
                       <option key={m.id} value={m.id}>{getMemberName(m)}</option>
                     ))}
                   </select>
@@ -805,12 +823,12 @@ export default function App() {
                     {T[lang].whoPaidTitle}
                   </h3>
                   <span className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors ${darkMode ? "bg-slate-800 text-slate-400" : "bg-slate-200/50 text-slate-400"}`}>
-                    {T[lang].peopleCount(paidCount, totalMembersCount)}
+                    {T[lang].peopleCount(paidCount, visibleMembers.length)}
                   </span>
                 </div>
                 
                 <div className="space-y-3">
-                  {members.map((member) => {
+                  {visibleMembers.map((member) => {
                     const isPaid = monthPayments[member.id] || false;
                     const isPurchaser = currentPurchaserId === member.id;
 
