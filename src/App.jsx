@@ -131,6 +131,8 @@ const T = {
     recoveryError: "തെറ്റായ കോഡ്! 🚫",
     pinChangedMsg: "പിൻ വിജയകരമായി മാറ്റി! ✅",
     cancelBtn: "ക്യാൻസൽ",
+    quickJump: "പെട്ടെന്ന് തിരയാൻ",
+    goBtn: "പോവുക"
   },
   EN: {
     appTitle: "Millionaire Plan 💰",
@@ -190,6 +192,8 @@ const T = {
     recoveryError: "Invalid Code! 🚫",
     pinChangedMsg: "PIN changed successfully! ✅",
     cancelBtn: "Cancel",
+    quickJump: "Quick Jump",
+    goBtn: "Go"
   },
 };
 
@@ -239,6 +243,10 @@ export default function App() {
   const [newMemberML, setNewMemberML] = useState("");
   const [newMemberEN, setNewMemberEN] = useState("");
 
+  // Quick Jump States
+  const [jumpMonth, setJumpMonth] = useState(currentDate.getMonth());
+  const [jumpYear, setJumpYear] = useState(currentDate.getFullYear());
+
   const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
   const currentMonthName = monthNames[lang][currentDate.getMonth()];
   const currentYear = currentDate.getFullYear();
@@ -279,6 +287,11 @@ export default function App() {
       console.log("Audio couldn't play", error);
     }
   };
+
+  useEffect(() => {
+    setJumpMonth(currentDate.getMonth());
+    setJumpYear(currentDate.getFullYear());
+  }, [currentDate]);
 
   useEffect(() => {
     const handleFirstInteraction = () => {
@@ -560,94 +573,127 @@ export default function App() {
       return new Date(yB, mB).getTime() - new Date(yA, mA).getTime();
     });
 
-    if (sortedKeys.length === 0) {
-      return (
-        <div className={`flex flex-col items-center justify-center py-20 px-6 text-center animate-in fade-in duration-500 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
-          <CalendarDays className={`w-16 h-16 mb-4 animate-pulse ${darkMode ? "text-slate-600" : "text-slate-300"}`} />
-          <h2 className={`text-xl font-bold mb-2 ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
-            {T[lang].emptyHistoryTitle}
-          </h2>
-          <p className="text-sm">{T[lang].emptyHistoryDesc}</p>
-        </div>
-      );
-    }
-
     return (
       <div className="px-6 py-6 pb-24">
-        <h2 className={`text-2xl font-extrabold mb-6 transition-colors ${darkMode ? "text-white" : "text-slate-900"}`}>
+        <h2 className={`text-2xl font-extrabold mb-4 transition-colors ${darkMode ? "text-white" : "text-slate-900"}`}>
           {T[lang].historyTitle}
         </h2>
-        <div className="space-y-4">
-          {sortedKeys.map((key, index) => {
-            const [year, month] = key.split("-").map(Number);
-            const pCount = Object.values(payments[key] || {}).filter(Boolean).length;
-            const collected = pCount * 50;
-            const historicalTarget = 500;
-            const purchaserInfo = members.find((m) => m.id === purchasers[key]);
-            const purchaser = purchaserInfo ? getMemberName(purchaserInfo) : (purchasers[key] ? T[lang].deletedMember : T[lang].noOne);
-            const tNumber = ticketNumbers[key] || T[lang].notTaken;
-            const purchaseMonthDisplay = `${monthNames[lang][month]} ${year}`;
 
-            return (
-              <div
-                key={key}
-                onClick={() => {
-                  setCurrentDate(new Date(year, month, 1));
-                  changeView("dashboard");
-                }}
-                className={`p-5 rounded-2xl shadow-sm border cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-in slide-in-from-bottom-4 fade-in ${
-                  darkMode ? "bg-slate-800/80 border-slate-700/50 hover:border-emerald-500/50" : "bg-white border-slate-100 hover:border-emerald-300"
-                }`}
-                style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className={`font-bold text-lg transition-colors ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
-                    {T[lang].historyCollectedTitle} {monthNames[lang][month]}
-                  </h3>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                      collected >= historicalTarget
-                        ? darkMode ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
-                        : darkMode ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
-                    }`}
-                  >
-                    {collected} / {historicalTarget} AED
-                  </span>
-                </div>
-
-                <div className={`space-y-3 p-4 rounded-xl border transition-colors ${darkMode ? "bg-slate-900/50 border-slate-800/80" : "bg-slate-50 border-slate-100"}`}>
-                  <div className={`flex items-center justify-between pb-2 border-b ${darkMode ? "border-slate-700/50" : "border-slate-200/60"}`}>
-                    <div className={`flex items-center gap-2 text-sm ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
-                      <CalendarCheck className="w-4 h-4 text-emerald-500" />
-                      <span className="font-semibold">{T[lang].historyMonthTaken}</span>
-                    </div>
-                    <span className={`text-sm font-bold px-2 py-0.5 rounded ${darkMode ? "text-emerald-400 bg-emerald-500/10" : "text-emerald-700 bg-emerald-100/50"}`}>
-                      {purchaseMonthDisplay}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className={`flex items-center gap-2 text-sm ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
-                      <Users className={`w-4 h-4 ${darkMode ? "text-slate-500" : "text-slate-400"}`} />
-                      <span className="font-semibold">{T[lang].historyBuyer}</span>
-                    </div>
-                    <span className={`text-sm font-medium ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{purchaser}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className={`flex items-center gap-2 text-sm ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
-                      <Hash className={`w-4 h-4 ${darkMode ? "text-slate-500" : "text-slate-400"}`} />
-                      <span className="font-semibold">{T[lang].historyLotteryNum}</span>
-                    </div>
-                    <span className={tNumber === T[lang].notTaken ? `text-xs italic ${darkMode ? "text-slate-500" : "text-slate-400"}` : `text-sm font-mono font-bold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
-                      {tNumber}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        {/* QUICK JUMP DROPDOWNS SECTION */}
+        <div className={`mb-6 p-4 rounded-2xl border shadow-sm ${darkMode ? "bg-slate-800/40 border-slate-700/50" : "bg-white border-slate-100"}`}>
+          <div className="flex gap-2">
+            <select
+              value={jumpMonth}
+              onChange={(e) => setJumpMonth(parseInt(e.target.value))}
+              className={`flex-1 text-sm font-bold rounded-xl px-2.5 py-2.5 border focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer ${darkMode ? "bg-slate-900 border-slate-700 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"}`}
+            >
+              {monthNames[lang].map((mName, idx) => (
+                <option key={idx} value={idx}>{mName}</option>
+              ))}
+            </select>
+            <select
+              value={jumpYear}
+              onChange={(e) => setJumpYear(parseInt(e.target.value))}
+              className={`w-28 text-sm font-bold rounded-xl px-2.5 py-2.5 border focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer ${darkMode ? "bg-slate-900 border-slate-700 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"}`}
+            >
+              {yearsList.map((yr) => (
+                <option key={yr} value={yr}>{yr}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                vibrate();
+                setCurrentDate(new Date(jumpYear, jumpMonth, 1));
+                changeView("dashboard");
+              }}
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black px-4 py-2.5 rounded-xl hover:from-emerald-600 hover:to-emerald-700 shadow-sm active:scale-95 transition-all"
+            >
+              {T[lang].goBtn}
+            </button>
+          </div>
         </div>
+
+        {sortedKeys.length === 0 ? (
+          <div className={`flex flex-col items-center justify-center py-10 px-6 text-center animate-in fade-in duration-500 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+            <CalendarDays className={`w-16 h-16 mb-4 animate-pulse ${darkMode ? "text-slate-600" : "text-slate-300"}`} />
+            <h2 className={`text-xl font-bold mb-2 ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
+              {T[lang].emptyHistoryTitle}
+            </h2>
+            <p className="text-sm">{T[lang].emptyHistoryDesc}</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {sortedKeys.map((key, index) => {
+              const [year, month] = key.split("-").map(Number);
+              const pCount = Object.values(payments[key] || {}).filter(Boolean).length;
+              const collected = pCount * 50;
+              const historicalTarget = 500;
+              const purchaserInfo = members.find((m) => m.id === purchasers[key]);
+              const purchaser = purchaserInfo ? getMemberName(purchaserInfo) : (purchasers[key] ? T[lang].deletedMember : T[lang].noOne);
+              const tNumber = ticketNumbers[key] || T[lang].notTaken;
+              const purchaseMonthDisplay = `${monthNames[lang][month]} ${year}`;
+
+              return (
+                <div
+                  key={key}
+                  onClick={() => {
+                    setCurrentDate(new Date(year, month, 1));
+                    changeView("dashboard");
+                  }}
+                  className={`p-5 rounded-2xl shadow-sm border cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-in slide-in-from-bottom-4 fade-in ${
+                    darkMode ? "bg-slate-800/80 border-slate-700/50 hover:border-emerald-500/50" : "bg-white border-slate-100 hover:border-emerald-300"
+                  }`}
+                  style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
+                >
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className={`font-bold text-lg transition-colors ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
+                      {T[lang].historyCollectedTitle} {monthNames[lang][month]}
+                    </h3>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+                        collected >= historicalTarget
+                          ? darkMode ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                          : darkMode ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {collected} / {historicalTarget} AED
+                    </span>
+                  </div>
+
+                  <div className={`space-y-3 p-4 rounded-xl border transition-colors ${darkMode ? "bg-slate-900/50 border-slate-800/80" : "bg-slate-50 border-slate-100"}`}>
+                    <div className={`flex items-center justify-between pb-2 border-b ${darkMode ? "border-slate-700/50" : "border-slate-200/60"}`}>
+                      <div className={`flex items-center gap-2 text-sm ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
+                        <CalendarCheck className="w-4 h-4 text-emerald-500" />
+                        <span className="font-semibold">{T[lang].historyMonthTaken}</span>
+                      </div>
+                      <span className={`text-sm font-bold px-2 py-0.5 rounded ${darkMode ? "text-emerald-400 bg-emerald-500/10" : "text-emerald-700 bg-emerald-100/50"}`}>
+                        {purchaseMonthDisplay}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className={`flex items-center gap-2 text-sm ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
+                        <Users className={`w-4 h-4 ${darkMode ? "text-slate-500" : "text-slate-400"}`} />
+                        <span className="font-semibold">{T[lang].historyBuyer}</span>
+                      </div>
+                      <span className={`text-sm font-medium ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{purchaser}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className={`flex items-center gap-2 text-sm ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
+                        <Hash className={`w-4 h-4 ${darkMode ? "text-slate-500" : "text-slate-400"}`} />
+                        <span className="font-semibold">{T[lang].historyLotteryNum}</span>
+                      </div>
+                      <span className={tNumber === T[lang].notTaken ? `text-xs italic ${darkMode ? "text-slate-500" : "text-slate-400"}` : `text-sm font-mono font-bold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
+                        {tNumber}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   };
@@ -724,45 +770,15 @@ export default function App() {
                 >
                   <Award className="absolute -right-6 -bottom-6 w-32 h-32 text-white/10 rotate-12 transition-transform duration-700 hover:rotate-[24deg] hover:scale-110" />
 
-                  {/* MONTH & YEAR DROPDOWN HEADER */}
-                  <div className="flex items-center justify-between mb-8 relative z-10 gap-2">
-                    <button onClick={handlePrevMonth} className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm active:scale-90 flex-shrink-0">
+                  {/* SIMPLE DASHBOARD HEADER */}
+                  <div className="flex items-center justify-between mb-8 relative z-10">
+                    <button onClick={handlePrevMonth} className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm active:scale-90">
                       <ChevronLeft className="w-5 h-5 text-white" />
                     </button>
-
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={currentDate.getMonth()}
-                        onChange={(e) => {
-                          vibrate();
-                          setCurrentDate(new Date(currentDate.getFullYear(), parseInt(e.target.value), 1));
-                        }}
-                        className="bg-black/20 hover:bg-black/30 border border-white/30 text-white font-black text-sm rounded-xl px-2.5 py-1.5 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer transition-all shadow-inner [color-scheme:dark]"
-                      >
-                        {monthNames[lang].map((mName, idx) => (
-                          <option key={idx} value={idx} className="bg-slate-900 text-white font-bold">
-                            {mName}
-                          </option>
-                        ))}
-                      </select>
-
-                      <select
-                        value={currentDate.getFullYear()}
-                        onChange={(e) => {
-                          vibrate();
-                          setCurrentDate(new Date(parseInt(e.target.value), currentDate.getMonth(), 1));
-                        }}
-                        className="bg-black/20 hover:bg-black/30 border border-white/30 text-white font-black text-sm rounded-xl px-2.5 py-1.5 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer transition-all shadow-inner [color-scheme:dark]"
-                      >
-                        {yearsList.map((yr) => (
-                          <option key={yr} value={yr} className="bg-slate-900 text-white font-bold">
-                            {yr}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <button onClick={handleNextMonth} className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm active:scale-90 flex-shrink-0">
+                    <h2 className="text-lg font-bold tracking-wide drop-shadow-md text-white animate-in slide-in-from-top-2 fade-in">
+                      {currentMonthName} {currentYear}
+                    </h2>
+                    <button onClick={handleNextMonth} className="p-2 hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm active:scale-90">
                       <ChevronRight className="w-5 h-5 text-white" />
                     </button>
                   </div>
